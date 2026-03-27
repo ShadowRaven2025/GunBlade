@@ -18,29 +18,50 @@ var current_direction: Vector2 = Vector2.DOWN
 var idle_texture: Texture2D
 var run_texture: Texture2D
 var attack_texture: Texture2D
+var frame_count: int = 8
+var current_frame: int = 0
 
 func _ready():
 	current_health = max_health
 	idle_texture = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png")
 	run_texture = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Run.png")
 	attack_texture = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Attack1.png")
+	
 	sprite.texture = idle_texture
+	sprite.hframes = 8
+	sprite.vframes = 1
+	sprite.frame = 0
+
+var is_moving: bool = false
+var anim_timer: float = 0.0
+var anim_speed: float = 0.15
 
 func _physics_process(_delta):
 	var direction = _get_input_direction()
-	if direction.length() > 0:
-		current_direction = direction
-		sprite.texture = run_texture
-	else:
-		sprite.texture = idle_texture
+	is_moving = direction.length() > 0
 	
 	_flip_sprite(direction)
 	
 	velocity = direction * speed
 	move_and_slide()
 	
+	_animate(_delta)
+	
 	if Input.is_action_just_pressed("attack"):
 		attack()
+
+func _animate(_delta):
+	anim_timer += _delta
+	if anim_timer >= anim_speed:
+		anim_timer = 0.0
+		current_frame = (current_frame + 1) % frame_count
+	
+	if is_moving:
+		sprite.texture = run_texture
+		sprite.frame = current_frame
+	else:
+		sprite.texture = idle_texture
+		sprite.frame = current_frame
 
 func _get_input_direction() -> Vector2:
 	var direction = Vector2.ZERO
