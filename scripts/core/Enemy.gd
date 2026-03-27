@@ -103,6 +103,4 @@ func take_damage(amount: int):
 
 func die():
 	died.emit()
-	if player and player.has_method("add_gold"):
-		player.add_gold(10)
 	queue_free()
