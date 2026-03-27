@@ -24,7 +24,6 @@ var sprite_attack: Texture2D
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var hitbox: Area2D = $Hitbox
-@onready var health_bar = preload("res://scenes/shared/HealthBar.tscn")
 
 func _ready():
 	_load_sprites()

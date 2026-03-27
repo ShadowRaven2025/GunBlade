@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp"]
+bg_color = Color(0.8, 0.2, 0.2, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="HealthBar" type="ProgressBar"]
+custom_minimum_size = Vector2(100, 20)
+max_value = 100.0
+show_percentage = false
+
+[node name="Fill" type="StyleBoxFlat" parent="."]
+layout_mode = 0
+offset_right = 100.0
+offset_bottom = 20.0
+bg_color = Color(0.2, 0.8, 0.2, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
