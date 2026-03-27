@@ -43,11 +43,12 @@ func _load_sprites():
 
 func _physics_process(_delta):
 	var direction = _get_input_direction()
-	print("Input direction: ", direction)
+	print("Input: ", direction, " Pos: ", global_position)
 	if direction.length() > 0:
 		current_direction = direction
 	velocity = direction * speed
 	move_and_slide()
+	print("After move: ", global_position)
 	_update_animation(direction)
 	_flip_sprite(direction)
 	
