@@ -43,6 +43,7 @@ func _load_sprites():
 
 func _physics_process(_delta):
 	var direction = _get_input_direction()
+	print("Input direction: ", direction)
 	if direction.length() > 0:
 		current_direction = direction
 	velocity = direction * speed
