@@ -1,6 +1,7 @@
 # Godot
 .godot/
 *.import
+assets/
 
 # Build
 build/
