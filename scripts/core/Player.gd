@@ -58,7 +58,7 @@ func _get_input_direction() -> Vector2:
 	direction.y = Input.get_axis("move_up", "move_down")
 	return direction.normalized()
 
-func _move(direction: Vector2, delta: float):
+func _move(direction: Vector2, _delta: float):
 	if direction != Vector2.ZERO:
 		current_direction = direction
 	velocity = direction * speed
