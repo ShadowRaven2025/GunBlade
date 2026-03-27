@@ -1,4 +1,5 @@
-class_name Enemy extends CharacterBody2D
+class_name Enemy
+extends CharacterBody2D
 
 signal died
 signal took_damage(amount: int)
@@ -48,7 +49,6 @@ func _connect_detection():
 		detection_area.body_exited.connect(_on_body_exited)
 
 func _on_body_entered(body):
-	print("Enemy detected: ", body.name)
 	if body.name == "Player":
 		target_player = body
 
