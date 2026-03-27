@@ -5,7 +5,8 @@ signal died
 @export var speed: float = 200.0
 @export var max_health: int = 100
 @export var attack_damage: int = 10
-@export var attack_cooldown: float = 0.5
+@export var attack_cooldown: float = 1.0
+@export var attack_duration: float = 0.3
 
 var current_health: int
 var can_attack: bool = true
@@ -63,8 +64,11 @@ func attack():
 			if e.has_method("take_damage"):
 				e.take_damage(attack_damage)
 		
-		await get_tree().create_timer(attack_cooldown).timeout
-		can_attack = false
+		await get_tree().create_timer(attack_duration).timeout
+		sprite.texture = idle_texture
+		
+		await get_tree().create_timer(attack_cooldown - attack_duration).timeout
+		can_attack = true
 
 func take_damage(amount: int):
 	current_health -= amount
