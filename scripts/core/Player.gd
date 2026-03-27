@@ -43,8 +43,12 @@ func _load_sprites():
 
 func _physics_process(_delta):
 	var direction = _get_input_direction()
-	_move(direction)
+	if direction.length() > 0:
+		current_direction = direction
+	velocity = direction * speed
+	move_and_slide()
 	_update_animation(direction)
+	_flip_sprite(direction)
 	
 	if Input.is_action_just_pressed("attack"):
 		attack()

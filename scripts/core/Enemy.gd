@@ -42,10 +42,13 @@ func _load_sprites():
 
 func _connect_detection():
 	if detection_area:
+		detection_area.monitoring = true
+		detection_area.monitorable = true
 		detection_area.body_entered.connect(_on_body_entered)
 		detection_area.body_exited.connect(_on_body_exited)
 
 func _on_body_entered(body):
+	print("Enemy detected: ", body.name)
 	if body.name == "Player":
 		target_player = body
 
