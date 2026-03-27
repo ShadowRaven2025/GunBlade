@@ -1,5 +1,4 @@
-extends CharacterBody2D
-class_name Player
+class_name Player extends CharacterBody2D
 
 signal health_changed(current_hp: int, max_hp: int)
 signal mana_changed(current_mana: int, max_mana: int)
@@ -18,35 +17,33 @@ var is_attacking: bool = false
 var can_attack: bool = true
 var current_direction: Vector2 = Vector2.DOWN
 
-var sprite_idle: Texture2D
-var sprite_run: Texture2D
-var sprite_attack: Texture2D
-
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var hitbox: Area2D = $Hitbox
 
 func _ready():
-	_load_sprites()
 	current_health = max_health
 	current_mana = max_mana
+	_load_sprites()
 
 func _load_sprites():
-	sprite_idle = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png")
-	sprite_run = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Run.png")
-	sprite_attack = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Attack1.png")
+	var idle_tex = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png")
+	var run_tex = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Run.png")
+	var attack_tex = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Attack1.png")
 	
-	animated_sprite.sprite_frames = SpriteFrames.new()
-	animated_sprite.sprite_frames.add_animation("idle")
-	animated_sprite.sprite_frames.add_frame("idle", sprite_idle)
-	animated_sprite.sprite_frames.add_animation("run")
-	animated_sprite.sprite_frames.add_frame("run", sprite_run)
-	animated_sprite.sprite_frames.add_animation("attack")
-	animated_sprite.sprite_frames.add_frame("attack", sprite_attack)
+	var frames = SpriteFrames.new()
+	frames.add_animation("idle")
+	frames.add_animation("run")
+	frames.add_animation("attack")
+	frames.add_frame("idle", idle_tex)
+	frames.add_frame("run", run_tex)
+	frames.add_frame("attack", attack_tex)
+	
+	animated_sprite.sprite_frames = frames
 	animated_sprite.play("idle")
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	var direction = _get_input_direction()
-	_move(direction, delta)
+	_move(direction)
 	_update_animation(direction)
 	
 	if Input.is_action_just_pressed("attack"):
@@ -58,7 +55,7 @@ func _get_input_direction() -> Vector2:
 	direction.y = Input.get_axis("move_up", "move_down")
 	return direction.normalized()
 
-func _move(direction: Vector2, _delta: float):
+func _move(direction: Vector2):
 	if direction != Vector2.ZERO:
 		current_direction = direction
 	velocity = direction * speed
@@ -79,9 +76,6 @@ func _update_animation(direction: Vector2):
 	else:
 		animated_sprite.play("idle")
 
-func _setup_animations():
-	pass
-
 func attack():
 	if can_attack:
 		can_attack = false
@@ -89,9 +83,9 @@ func attack():
 		animated_sprite.play("attack")
 		
 		var enemies = hitbox.get_overlapping_bodies()
-		for enemy in enemies:
-			if enemy.has_method("take_damage"):
-				enemy.take_damage(attack_damage)
+		for e in enemies:
+			if e.has_method("take_damage"):
+				e.take_damage(attack_damage)
 		
 		await get_tree().create_timer(attack_cooldown).timeout
 		can_attack = true
@@ -107,17 +101,6 @@ func take_damage(amount: int):
 func heal(amount: int):
 	current_health = min(current_health + amount, max_health)
 	health_changed.emit(current_health, max_health)
-
-func use_mana(amount: int) -> bool:
-	if current_mana >= amount:
-		current_mana -= amount
-		mana_changed.emit(current_mana, max_mana)
-		return true
-	return false
-
-func restore_mana(amount: int):
-	current_mana = min(current_mana + amount, max_mana)
-	mana_changed.emit(current_mana, max_mana)
 
 func die():
 	died.emit()

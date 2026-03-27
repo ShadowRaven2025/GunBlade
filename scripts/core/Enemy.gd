@@ -1,22 +1,18 @@
-extends CharacterBody2D
-class_name Enemy
+class_name Enemy extends CharacterBody2D
 
 signal died
 signal took_damage(amount: int)
 
 @export var max_health: int = 30
 @export var damage: int = 10
-@export var speed: float = 100.0
+@export var move_speed: float = 100.0
 @export var attack_range: float = 40.0
 @export var attack_cooldown: float = 1.0
 @export var follow_range: float = 200.0
 
 var current_health: int
 var can_attack: bool = true
-var player: Node2D = null
-
-var sprite_idle: Texture2D
-var sprite_run: Texture2D
+var target_player: Node2D = null
 
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var hitbox: Area2D = $Hitbox
@@ -25,28 +21,47 @@ var sprite_run: Texture2D
 func _ready():
 	current_health = max_health
 	_load_sprites()
-	_detection_setup()
+	_connect_detection()
 
 func _load_sprites():
-	sprite_idle = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Pawn/Pawn_Idle.png")
-	sprite_run = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Pawn/Pawn_Run.png")
+	var idle_tex = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Pawn/Pawn_Idle.png")
+	var run_tex = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Pawn/Pawn_Run.png")
 	
-	animated_sprite.sprite_frames = SpriteFrames.new()
-	animated_sprite.sprite_frames.add_animation("idle")
-	animated_sprite.sprite_frames.add_frame("idle", sprite_idle)
-	animated_sprite.sprite_frames.add_animation("run")
-	animated_sprite.sprite_frames.add_frame("run", sprite_run)
+	var frames = SpriteFrames.new()
+	frames.add_animation("idle")
+	frames.add_animation("run")
+	frames.add_animation("attack")
+	frames.add_animation("hurt")
+	frames.add_frame("idle", idle_tex)
+	frames.add_frame("run", run_tex)
+	frames.add_frame("attack", idle_tex)
+	frames.add_frame("hurt", idle_tex)
+	
+	animated_sprite.sprite_frames = frames
 	animated_sprite.play("idle")
 
-func _physics_process(delta):
-	if player:
-		var distance = global_position.distance_to(player.global_position)
+func _connect_detection():
+	if detection_area:
+		detection_area.body_entered.connect(_on_body_entered)
+		detection_area.body_exited.connect(_on_body_exited)
+
+func _on_body_entered(body):
+	if body.name == "Player":
+		target_player = body
+
+func _on_body_exited(body):
+	if body.name == "Player":
+		target_player = null
+
+func _physics_process(_delta):
+	if is_instance_valid(target_player):
+		var distance = global_position.distance_to(target_player.global_position)
 		
 		if distance <= follow_range:
-			var direction = (player.global_position - global_position).normalized()
+			var direction = (target_player.global_position - global_position).normalized()
 			
 			if distance > attack_range:
-				velocity = direction * speed
+				velocity = direction * move_speed
 				animated_sprite.play("run")
 			else:
 				velocity = Vector2.ZERO
@@ -66,26 +81,12 @@ func _flip_sprite(direction: Vector2):
 	elif direction.x > 0:
 		animated_sprite.flip_h = false
 
-func _detection_setup():
-	if detection_area:
-		detection_area.body_entered.connect(_on_player_detected)
-		detection_area.body_exited.connect(_on_player_lost)
-
-func _on_player_detected(body):
-	if body is Player:
-		player = body
-
-func _on_player_lost(body):
-	if body is Player:
-		if player == body:
-			player = null
-
 func attack():
 	can_attack = false
 	animated_sprite.play("attack")
 	
-	if player and global_position.distance_to(player.global_position) <= attack_range:
-		player.take_damage(damage)
+	if is_instance_valid(target_player) and global_position.distance_to(target_player.global_position) <= attack_range:
+		target_player.take_damage(damage)
 	
 	await get_tree().create_timer(attack_cooldown).timeout
 	can_attack = true

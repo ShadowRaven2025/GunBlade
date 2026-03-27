@@ -1,145 +1,35 @@
 [gd_scene load_steps=4 format=3]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+[ext_resource type="Script" path="res://scripts/core/Player.gd" id="1_player"]
+[ext_resource type="PackedScene" uid="uid://enemy_scene" path="res://scenes/game/characters/Enemy.tscn" id="2_enemy"]
+
+[sub_resource type="RectangleShape2D" id="Shape_player"]
 size = Vector2(32, 32)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_enemy"]
+[sub_resource type="RectangleShape2D" id="Shape_hitbox"]
 size = Vector2(32, 32)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_detection"]
-size = Vector2(200, 200)
-
-[sub_resource type="GDScript" id="GDScript_gamemanager"]
-script/source = "extends Node
-
-func _ready():
-	await get_tree().process_frame
-	_setup_player()
-	_setup_enemies()
-
-func _setup_player():
-	var player = get_node_or_null("Player")
-	if not player:
-		push_error("Player not found!")
-		return
-	
-	player.set_script(load("res://scripts/core/Player.gd"))
-	player.speed = 200.0
-	player.max_health = 100
-	player.max_mana = 50
-	player.attack_damage = 10
-	player.attack_range = 50.0
-	player.attack_cooldown = 0.5
-	
-	var sprite = player.get_node(\"AnimatedSprite2D\")
-	sprite.sprite_frames = _create_player_sprites()
-	sprite.play(\"idle\")
-
-func _create_player_sprites() -> SpriteFrames:
-	var frames = SpriteFrames.new()
-	frames.add_animation(\"idle\")
-	frames.add_animation(\"run\")
-	frames.add_animation(\"attack\")
-	
-	var idle_tex = load(\"res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png\")
-	var run_tex = load(\"res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Run.png\")
-	var attack_tex = load(\"res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Attack1.png\")
-	
-	frames.add_frame(\"idle\", idle_tex)
-	frames.add_frame(\"run\", run_tex)
-	frames.add_frame(\"attack\", attack_tex)
-	
-	return frames
-
-func _setup_enemies():
-	var enemy_names = [\"Enemy\", \"Enemy2\"]
-	for name in enemy_names:
-		var enemy = find_child(name, true, false)
-		if enemy:
-			_setup_enemy(enemy)
-
-func _setup_enemy(enemy: CharacterBody2D):
-	enemy.set_script(load(\"res://scripts/core/Enemy.gd\"))
-	enemy.max_health = 30
-	enemy.damage = 10
-	enemy.speed = 100.0
-	enemy.attack_range = 40.0
-	enemy.attack_cooldown = 1.0
-	enemy.follow_range = 200.0
-	
-	var sprite = enemy.get_node(\"AnimatedSprite2D\")
-	sprite.sprite_frames = _create_enemy_sprites()
-	sprite.play(\"idle\")
-
-func _create_enemy_sprites() -> SpriteFrames:
-	var frames = SpriteFrames.new()
-	frames.add_animation(\"idle\")
-	frames.add_animation(\"run\")
-	frames.add_animation(\"attack\")
-	frames.add_animation(\"hurt\")
-	
-	var idle_tex = load(\"res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Pawn/Pawn_Idle.png\")
-	var run_tex = load(\"res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Pawn/Pawn_Run.png\")
-	
-	frames.add_frame(\"idle\", idle_tex)
-	frames.add_frame(\"run\", run_tex)
-	frames.add_frame(\"attack\", idle_tex)
-	frames.add_frame(\"hurt\", idle_tex)
-	
-	return frames
-"
 
 [node name="Dungeon" type="Node2D"]
 
-[node name="GameManager" type="Node" parent="."]
-script = SubResource("GDScript_gamemanager")
-
 [node name="Player" type="CharacterBody2D" parent="."]
+script = ExtResource("1_player")
+speed = 200.0
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Player"]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Player"]
-shape = SubResource("RectangleShape2D_player")
+shape = SubResource("Shape_player")
 
 [node name="Hitbox" type="Area2D" parent="Player"]
 
 [node name="HitboxShape" type="CollisionShape2D" parent="Player/Hitbox"]
-shape = SubResource("RectangleShape2D_player")
+shape = SubResource("Shape_hitbox")
 
 [node name="Camera2D" type="Camera2D" parent="Player"]
+current = true
 
-[node name="Enemy" type="CharacterBody2D" parent="."]
+[node name="Enemy" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(450, 200)
 
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Enemy"]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy"]
-shape = SubResource("RectangleShape2D_enemy")
-
-[node name="Hitbox" type="Area2D" parent="Enemy"]
-
-[node name="HitboxShape" type="CollisionShape2D" parent="Enemy/Hitbox"]
-shape = SubResource("RectangleShape2D_enemy")
-
-[node name="DetectionArea" type="Area2D" parent="Enemy"]
-
-[node name="DetectionShape" type="CollisionShape2D" parent="Enemy/DetectionArea"]
-shape = SubResource("RectangleShape2D_detection")
-
-[node name="Enemy2" type="CharacterBody2D" parent="."]
+[node name="Enemy2" parent="." instance=ExtResource("2_enemy")]
 position = Vector2(250, 150)
-
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Enemy2"]
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Enemy2"]
-shape = SubResource("RectangleShape2D_enemy")
-
-[node name="Hitbox" type="Area2D" parent="Enemy2"]
-
-[node name="HitboxShape" type="CollisionShape2D" parent="Enemy2/Hitbox"]
-shape = SubResource("RectangleShape2D_enemy")
-
-[node name="DetectionArea" type="Area2D" parent="Enemy2"]
-
-[node name="DetectionShape" type="CollisionShape2D" parent="Enemy2/DetectionArea"]
-shape = SubResource("RectangleShape2D_detection")

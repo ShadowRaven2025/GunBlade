@@ -1,9 +1,9 @@
 [gd_scene load_steps=3 format=3]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+[sub_resource type="RectangleShape2D" id="Shape_player"]
 size = Vector2(32, 32)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_hitbox"]
+[sub_resource type="RectangleShape2D" id="Shape_hitbox"]
 size = Vector2(32, 32)
 
 [node name="Player" type="CharacterBody2D"]
@@ -11,9 +11,11 @@ size = Vector2(32, 32)
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_player")
+shape = SubResource("Shape_player")
 
 [node name="Hitbox" type="Area2D" parent="."]
 
 [node name="HitboxShape" type="CollisionShape2D" parent="Hitbox"]
-shape = SubResource("RectangleShape2D_hitbox")
+shape = SubResource("Shape_hitbox")
+
+[node name="Camera2D" type="Camera2D" parent="."]
