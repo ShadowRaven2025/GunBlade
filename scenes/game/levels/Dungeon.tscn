@@ -13,12 +13,17 @@ size = Vector2(200, 200)
 script/source = "extends Node
 
 func _ready():
+	await get_tree().process_frame
 	_setup_player()
 	_setup_enemies()
 
 func _setup_player():
-	var player = $Player
-	player.set_script(load(\"res://scripts/core/Player.gd\"))
+	var player = get_node_or_null("Player")
+	if not player:
+		push_error("Player not found!")
+		return
+	
+	player.set_script(load("res://scripts/core/Player.gd"))
 	player.speed = 200.0
 	player.max_health = 100
 	player.max_mana = 50
