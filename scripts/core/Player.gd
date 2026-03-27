@@ -95,7 +95,7 @@ func attack():
 				enemy.take_damage(attack_damage)
 		
 		await get_tree().create_timer(attack_cooldown).timeout
-		can_attack = false
+		can_attack = true
 		is_attacking = false
 
 func take_damage(amount: int):
