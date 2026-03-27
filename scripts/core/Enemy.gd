@@ -15,13 +15,28 @@ var current_health: int
 var can_attack: bool = true
 var player: Node2D = null
 
+var sprite_idle: Texture2D
+var sprite_run: Texture2D
+
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var hitbox: Area2D = $Hitbox
 @onready var detection_area: Area2D = $DetectionArea
 
 func _ready():
 	current_health = max_health
+	_load_sprites()
 	_detection_setup()
+
+func _load_sprites():
+	sprite_idle = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Pawn/Pawn_Idle.png")
+	sprite_run = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Pawn/Pawn_Run.png")
+	
+	animated_sprite.sprite_frames = SpriteFrames.new()
+	animated_sprite.sprite_frames.add_animation("idle")
+	animated_sprite.sprite_frames.add_frame("idle", sprite_idle)
+	animated_sprite.sprite_frames.add_animation("run")
+	animated_sprite.sprite_frames.add_frame("run", sprite_run)
+	animated_sprite.play("idle")
 
 func _physics_process(delta):
 	if player:

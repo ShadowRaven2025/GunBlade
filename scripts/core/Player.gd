@@ -18,19 +18,40 @@ var is_attacking: bool = false
 var can_attack: bool = true
 var current_direction: Vector2 = Vector2.DOWN
 
+var sprite_idle: Texture2D
+var sprite_run: Texture2D
+var sprite_attack: Texture2D
+
 @onready var animated_sprite: AnimatedSprite2D = $AnimatedSprite2D
 @onready var hitbox: Area2D = $Hitbox
 @onready var health_bar = preload("res://scenes/shared/HealthBar.tscn")
 
 func _ready():
+	_load_sprites()
 	current_health = max_health
 	current_mana = max_mana
-	_setup_animations()
+
+func _load_sprites():
+	sprite_idle = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png")
+	sprite_run = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Run.png")
+	sprite_attack = load("res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Attack1.png")
+	
+	animated_sprite.sprite_frames = SpriteFrames.new()
+	animated_sprite.sprite_frames.add_animation("idle")
+	animated_sprite.sprite_frames.add_frame("idle", sprite_idle)
+	animated_sprite.sprite_frames.add_animation("run")
+	animated_sprite.sprite_frames.add_frame("run", sprite_run)
+	animated_sprite.sprite_frames.add_animation("attack")
+	animated_sprite.sprite_frames.add_frame("attack", sprite_attack)
+	animated_sprite.play("idle")
 
 func _physics_process(delta):
 	var direction = _get_input_direction()
 	_move(direction, delta)
 	_update_animation(direction)
+	
+	if Input.is_action_just_pressed("attack"):
+		attack()
 
 func _get_input_direction() -> Vector2:
 	var direction = Vector2.ZERO
