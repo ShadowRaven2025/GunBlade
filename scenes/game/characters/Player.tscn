@@ -1,0 +1,47 @@
+[gd_scene load_steps=5 format=3 uid="uid://player_scene"]
+
+[ext_resource type="Script" path="res://scripts/core/Player.gd" id="1_player"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png" id="2_idle"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_warrior"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_idle")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [],
+"loop": true,
+"name": &"run",
+"speed": 5.0
+}, {
+"frames": [],
+"loop": false,
+"name": &"attack",
+"speed": 5.0
+}],
+"sprite_frames": 3,
+"strip_data": PackedStringArray([])
+}
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(32, 32)
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1_player")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_warrior")
+animation = &"idle"
+flip_h = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_player")
+
+[node name="Hitbox" type="Area2D" parent="."]
+
+[node name="HitboxShape" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("RectangleShape2D_player")
