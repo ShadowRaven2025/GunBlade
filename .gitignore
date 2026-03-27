@@ -1,0 +1,27 @@
+# Godot
+.godot/
+*.import
+
+# Build
+build/
+export/
+*.pck
+*.exe
+*.dmg
+*.app
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs
+*.log
+
+# Temp
+tmp/
+temp/
