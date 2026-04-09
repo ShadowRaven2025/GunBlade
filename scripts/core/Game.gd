@@ -4,13 +4,46 @@ var current_floor: int = 1
 var gold: int = 0
 var current_run_data: Dictionary = {}
 var is_paused: bool = false
+var selected_character: String = "warrior"
+
+const CHARACTER_CONFIGS := {
+	"warrior": {
+		"label": "Warrior",
+		"idle": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png",
+		"run": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Run.png",
+		"attack": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Attack1.png",
+		"max_health": 120,
+		"speed": 265.0,
+		"jump_velocity": -455.0,
+		"attack_damage": 16,
+		"attack_range": 54.0
+	},
+	"archer": {
+		"label": "Archer",
+		"idle": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Archer/Archer_Idle.png",
+		"run": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Archer/Archer_Run.png",
+		"attack": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Archer/Archer_Shoot.png",
+		"max_health": 90,
+		"speed": 295.0,
+		"jump_velocity": -480.0,
+		"attack_damage": 11,
+		"attack_range": 62.0
+	},
+	"monk": {
+		"label": "Monk",
+		"idle": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Idle.png",
+		"run": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Run.png",
+		"attack": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Heal.png",
+		"max_health": 100,
+		"speed": 280.0,
+		"jump_velocity": -470.0,
+		"attack_damage": 13,
+		"attack_range": 50.0
+	}
+}
 
 func _ready():
 	load_game()
-
-func _process(delta):
-	if Input.is_action_pressed("ui_cancel"):
-		toggle_pause()
 
 func toggle_pause():
 	is_paused = !is_paused
@@ -21,6 +54,7 @@ func new_game():
 	gold = 0
 	current_run_data = {
 		"floor": 1,
+		"character": selected_character,
 		"gold": 0,
 		"runes": [],
 		"curses": [],
@@ -30,6 +64,15 @@ func new_game():
 		"items_collected": 0
 	}
 	save_game()
+
+func set_selected_character(character_id: String):
+	if CHARACTER_CONFIGS.has(character_id):
+		selected_character = character_id
+		current_run_data["character"] = character_id
+		save_game()
+
+func get_selected_character_config() -> Dictionary:
+	return CHARACTER_CONFIGS.get(selected_character, CHARACTER_CONFIGS["warrior"])
 
 func next_floor():
 	current_floor += 1
@@ -61,6 +104,7 @@ func load_game():
 		current_run_data = JSON.parse_string(json_string)
 		current_floor = current_run_data.get("floor", 1)
 		gold = current_run_data.get("gold", 0)
+		selected_character = current_run_data.get("character", selected_character)
 		save_file.close()
 
 func game_over():

@@ -1,15 +1,19 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=31 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/Dungeon.gd" id="1_dungeon"]
 [ext_resource type="Script" path="res://scripts/core/Player.gd" id="2_player"]
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png" id="3_warrior"]
 [ext_resource type="PackedScene" uid="uid://enemy_scene" path="res://scenes/game/characters/Enemy.tscn" id="4_enemy"]
-[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/Castle.png" id="5_castle"]
-[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/Tower.png" id="6_tower"]
-[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/House2.png" id="7_house"]
-[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/cut/Banners/Banner_0_3.png" id="8_banner"]
-[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/UI Elements/Wood Table/WoodTable.png" id="9_wood_table"]
-[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Particle FX/Fire_01.png" id="10_fire"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/Castle.png" id="5_black_castle"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/Tower.png" id="6_black_tower"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/House2.png" id="7_black_house"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Yellow Buildings/Archery.png" id="8_yellow_archery"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Yellow Buildings/Barracks.png" id="9_yellow_barracks"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/cut/Banners/Banner_0_3.png" id="10_banner_red"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/cut/Banners/Banner_4_7.png" id="11_banner_blue"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/UI Elements/Wood Table/WoodTable.png" id="12_wood_table"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/UI Elements/Wood Table/WoodTable_Slots.png" id="13_wood_slots"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Particle FX/Fire_01.png" id="14_fire"]
 
 [sub_resource type="RectangleShape2D" id="Shape_player"]
 size = Vector2(28, 44)
@@ -22,6 +26,9 @@ size = Vector2(158, 20)
 
 [sub_resource type="RectangleShape2D" id="Shape_platform_mid"]
 size = Vector2(118, 20)
+
+[sub_resource type="RectangleShape2D" id="Shape_platform_long"]
+size = Vector2(218, 20)
 
 [sub_resource type="RectangleShape2D" id="Shape_wall"]
 size = Vector2(28, 330)
@@ -52,65 +59,93 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
-[node name="Dungeon" type="Node2D"]
+[node name="TestRoom" type="Node2D"]
 script = ExtResource("1_dungeon")
 
 [node name="Backdrop" type="ColorRect" parent="."]
 offset_right = 1280.0
 offset_bottom = 720.0
-color = Color(0.03, 0.04, 0.06, 1)
+color = Color(0.025, 0.03, 0.045, 1)
 
-[node name="BackgroundCastle" type="Sprite2D" parent="."]
-position = Vector2(640, 274)
-scale = Vector2(3.2, 3.2)
-modulate = Color(0.42, 0.42, 0.5, 0.22)
-texture = ExtResource("5_castle")
+[node name="BackCastle" type="Sprite2D" parent="."]
+position = Vector2(640, 250)
+scale = Vector2(3.4, 3.4)
+modulate = Color(0.36, 0.38, 0.5, 0.18)
+texture = ExtResource("5_black_castle")
 
-[node name="BackgroundTowerLeft" type="Sprite2D" parent="."]
-position = Vector2(162, 332)
+[node name="BackTowerLeft" type="Sprite2D" parent="."]
+position = Vector2(118, 290)
 scale = Vector2(2.8, 2.8)
-modulate = Color(0.4, 0.4, 0.48, 0.18)
-texture = ExtResource("6_tower")
+modulate = Color(0.36, 0.38, 0.46, 0.18)
+texture = ExtResource("6_black_tower")
 
-[node name="BackgroundTowerRight" type="Sprite2D" parent="."]
-position = Vector2(1116, 338)
+[node name="BackTowerRight" type="Sprite2D" parent="."]
+position = Vector2(1160, 294)
 scale = Vector2(2.8, 2.8)
-modulate = Color(0.4, 0.4, 0.48, 0.18)
-texture = ExtResource("6_tower")
+modulate = Color(0.36, 0.38, 0.46, 0.18)
+texture = ExtResource("6_black_tower")
 
-[node name="BackgroundHouseLeft" type="Sprite2D" parent="."]
-position = Vector2(314, 556)
-scale = Vector2(2.4, 2.4)
-modulate = Color(0.52, 0.45, 0.42, 0.2)
-texture = ExtResource("7_house")
+[node name="MidArcheryLeft" type="Sprite2D" parent="."]
+position = Vector2(240, 432)
+scale = Vector2(2.2, 2.2)
+modulate = Color(0.72, 0.66, 0.58, 0.22)
+texture = ExtResource("8_yellow_archery")
 
-[node name="BackgroundHouseRight" type="Sprite2D" parent="."]
-position = Vector2(972, 554)
-scale = Vector2(2.4, 2.4)
-modulate = Color(0.52, 0.45, 0.42, 0.2)
-texture = ExtResource("7_house")
+[node name="MidBarracksRight" type="Sprite2D" parent="."]
+position = Vector2(1014, 448)
+scale = Vector2(2.25, 2.25)
+modulate = Color(0.72, 0.66, 0.58, 0.22)
+texture = ExtResource("9_yellow_barracks")
+
+[node name="FrontHouseLeft" type="Sprite2D" parent="."]
+position = Vector2(356, 564)
+scale = Vector2(2.0, 2.0)
+modulate = Color(0.64, 0.56, 0.5, 0.2)
+texture = ExtResource("7_black_house")
+
+[node name="FrontHouseRight" type="Sprite2D" parent="."]
+position = Vector2(924, 566)
+scale = Vector2(2.0, 2.0)
+modulate = Color(0.64, 0.56, 0.5, 0.2)
+texture = ExtResource("7_black_house")
+
+[node name="BannerFarLeft" type="Sprite2D" parent="."]
+position = Vector2(108, 138)
+scale = Vector2(2.8, 2.8)
+texture = ExtResource("10_banner_red")
 
 [node name="BannerLeft" type="Sprite2D" parent="."]
-position = Vector2(132, 164)
-scale = Vector2(2.6, 2.6)
-texture = ExtResource("8_banner")
+position = Vector2(220, 184)
+scale = Vector2(2.2, 2.2)
+texture = ExtResource("11_banner_blue")
 
 [node name="BannerRight" type="Sprite2D" parent="."]
-position = Vector2(1148, 164)
-scale = Vector2(-2.6, 2.6)
-texture = ExtResource("8_banner")
+position = Vector2(1060, 184)
+scale = Vector2(-2.2, 2.2)
+texture = ExtResource("11_banner_blue")
 
-[node name="FireLeft" type="Sprite2D" parent="."]
-position = Vector2(182, 584)
-scale = Vector2(2.2, 2.2)
-modulate = Color(1, 0.72, 0.42, 0.85)
-texture = ExtResource("10_fire")
+[node name="BannerFarRight" type="Sprite2D" parent="."]
+position = Vector2(1172, 138)
+scale = Vector2(-2.8, 2.8)
+texture = ExtResource("10_banner_red")
 
-[node name="FireRight" type="Sprite2D" parent="."]
-position = Vector2(1096, 584)
+[node name="TorchLeft" type="Sprite2D" parent="."]
+position = Vector2(176, 592)
+scale = Vector2(2.5, 2.5)
+modulate = Color(1, 0.72, 0.42, 0.9)
+texture = ExtResource("14_fire")
+
+[node name="TorchMid" type="Sprite2D" parent="."]
+position = Vector2(640, 512)
 scale = Vector2(2.2, 2.2)
-modulate = Color(1, 0.72, 0.42, 0.85)
-texture = ExtResource("10_fire")
+modulate = Color(1, 0.72, 0.42, 0.75)
+texture = ExtResource("14_fire")
+
+[node name="TorchRight" type="Sprite2D" parent="."]
+position = Vector2(1102, 592)
+scale = Vector2(2.5, 2.5)
+modulate = Color(1, 0.72, 0.42, 0.9)
+texture = ExtResource("14_fire")
 
 [node name="Ground" type="StaticBody2D" parent="."]
 position = Vector2(640, 652)
@@ -118,20 +153,35 @@ position = Vector2(640, 652)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
 shape = SubResource("Shape_ground")
 
-[node name="GroundVisualLeft" type="Sprite2D" parent="."]
+[node name="GroundWoodLeft" type="Sprite2D" parent="."]
 position = Vector2(242, 664)
 scale = Vector2(5.0, 1.5)
-texture = ExtResource("9_wood_table")
+texture = ExtResource("12_wood_table")
 
-[node name="GroundVisualCenter" type="Sprite2D" parent="."]
+[node name="GroundWoodCenter" type="Sprite2D" parent="."]
 position = Vector2(640, 664)
 scale = Vector2(5.0, 1.5)
-texture = ExtResource("9_wood_table")
+texture = ExtResource("12_wood_table")
 
-[node name="GroundVisualRight" type="Sprite2D" parent="."]
+[node name="GroundWoodRight" type="Sprite2D" parent="."]
 position = Vector2(1038, 664)
 scale = Vector2(5.0, 1.5)
-texture = ExtResource("9_wood_table")
+texture = ExtResource("12_wood_table")
+
+[node name="GroundTrimLeft" type="Sprite2D" parent="."]
+position = Vector2(242, 646)
+scale = Vector2(5.0, 1.3)
+texture = ExtResource("13_wood_slots")
+
+[node name="GroundTrimCenter" type="Sprite2D" parent="."]
+position = Vector2(640, 646)
+scale = Vector2(5.0, 1.3)
+texture = ExtResource("13_wood_slots")
+
+[node name="GroundTrimRight" type="Sprite2D" parent="."]
+position = Vector2(1038, 646)
+scale = Vector2(5.0, 1.3)
+texture = ExtResource("13_wood_slots")
 
 [node name="LeftWall" type="StaticBody2D" parent="."]
 position = Vector2(48, 378)
@@ -146,51 +196,71 @@ position = Vector2(1232, 378)
 shape = SubResource("Shape_wall")
 
 [node name="LeftPlatform" type="StaticBody2D" parent="."]
-position = Vector2(296, 522)
+position = Vector2(274, 530)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LeftPlatform"]
 shape = SubResource("Shape_platform_wide")
 
 [node name="LeftPlatformVisual" type="Sprite2D" parent="."]
-position = Vector2(296, 526)
-scale = Vector2(1.3, 0.48)
-texture = ExtResource("9_wood_table")
+position = Vector2(274, 534)
+scale = Vector2(1.35, 0.5)
+texture = ExtResource("12_wood_table")
+
+[node name="LeftPlatformTrim" type="Sprite2D" parent="."]
+position = Vector2(274, 520)
+scale = Vector2(1.35, 0.46)
+texture = ExtResource("13_wood_slots")
 
 [node name="CenterPlatform" type="StaticBody2D" parent="."]
-position = Vector2(640, 430)
+position = Vector2(640, 446)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="CenterPlatform"]
-shape = SubResource("Shape_platform_mid")
+shape = SubResource("Shape_platform_long")
 
 [node name="CenterPlatformVisual" type="Sprite2D" parent="."]
-position = Vector2(640, 434)
-scale = Vector2(1.0, 0.48)
-texture = ExtResource("9_wood_table")
+position = Vector2(640, 450)
+scale = Vector2(1.8, 0.5)
+texture = ExtResource("12_wood_table")
 
-[node name="RightPlatform" type="StaticBody2D" parent="."]
-position = Vector2(962, 314)
+[node name="CenterPlatformTrim" type="Sprite2D" parent="."]
+position = Vector2(640, 436)
+scale = Vector2(1.8, 0.46)
+texture = ExtResource("13_wood_slots")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="RightPlatform"]
+[node name="RightUpperPlatform" type="StaticBody2D" parent="."]
+position = Vector2(948, 324)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="RightUpperPlatform"]
 shape = SubResource("Shape_platform_wide")
 
-[node name="RightPlatformVisual" type="Sprite2D" parent="."]
-position = Vector2(962, 318)
-scale = Vector2(1.3, 0.48)
-texture = ExtResource("9_wood_table")
+[node name="RightUpperPlatformVisual" type="Sprite2D" parent="."]
+position = Vector2(948, 328)
+scale = Vector2(1.35, 0.5)
+texture = ExtResource("12_wood_table")
+
+[node name="RightUpperPlatformTrim" type="Sprite2D" parent="."]
+position = Vector2(948, 314)
+scale = Vector2(1.35, 0.46)
+texture = ExtResource("13_wood_slots")
 
 [node name="UpperLeftPlatform" type="StaticBody2D" parent="."]
-position = Vector2(404, 252)
+position = Vector2(410, 250)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="UpperLeftPlatform"]
 shape = SubResource("Shape_platform_mid")
 
 [node name="UpperLeftPlatformVisual" type="Sprite2D" parent="."]
-position = Vector2(404, 256)
-scale = Vector2(1.0, 0.48)
-texture = ExtResource("9_wood_table")
+position = Vector2(410, 254)
+scale = Vector2(1.0, 0.5)
+texture = ExtResource("12_wood_table")
+
+[node name="UpperLeftPlatformTrim" type="Sprite2D" parent="."]
+position = Vector2(410, 240)
+scale = Vector2(1.0, 0.46)
+texture = ExtResource("13_wood_slots")
 
 [node name="Player" type="CharacterBody2D" parent="."]
-position = Vector2(164, 592)
+position = Vector2(170, 592)
 script = ExtResource("2_player")
 speed = 280.0
 jump_velocity = -470.0
@@ -223,7 +293,7 @@ theme_override_styles/background = SubResource("StyleBoxFlat_player_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_player_fill")
 
 [node name="Enemy" parent="." instance=ExtResource("4_enemy")]
-position = Vector2(552, 390)
+position = Vector2(540, 406)
 max_health = 32
 damage = 12
 speed = 88.0
@@ -232,7 +302,7 @@ attack_range = 46.0
 gravity = 1040.0
 
 [node name="Enemy2" parent="." instance=ExtResource("4_enemy")]
-position = Vector2(1004, 274)
+position = Vector2(952, 286)
 max_health = 28
 damage = 10
 speed = 96.0
@@ -241,7 +311,7 @@ attack_range = 46.0
 gravity = 1040.0
 
 [node name="Enemy3" parent="." instance=ExtResource("4_enemy")]
-position = Vector2(746, 592)
+position = Vector2(756, 592)
 max_health = 36
 damage = 14
 speed = 82.0
@@ -262,8 +332,8 @@ limit_bottom = 720
 [node name="HUD" type="MarginContainer" parent="CanvasLayer"]
 offset_left = 26.0
 offset_top = 22.0
-offset_right = 434.0
-offset_bottom = 186.0
+offset_right = 470.0
+offset_bottom = 190.0
 theme_override_constants/margin_left = 18
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 18
@@ -288,11 +358,11 @@ layout_mode = 2
 [node name="RunLabel" type="Label" parent="CanvasLayer/HUD/VBox/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Prison Depths"
+text = "Test Chamber"
 
 [node name="RoomStatus" type="Label" parent="CanvasLayer/HUD/VBox/TopRow"]
 layout_mode = 2
-text = "Sweep the platform"
+text = "Character sandbox"
 horizontal_alignment = 2
 
 [node name="StatsRow" type="GridContainer" parent="CanvasLayer/HUD/VBox"]
@@ -301,15 +371,15 @@ columns = 4
 
 [node name="FloorLabel" type="Label" parent="CanvasLayer/HUD/VBox/StatsRow"]
 layout_mode = 2
-text = "Biome"
+text = "Room"
 
 [node name="FloorValue" type="Label" parent="CanvasLayer/HUD/VBox/StatsRow"]
 layout_mode = 2
-text = "01"
+text = "T1"
 
 [node name="EnemiesLabel" type="Label" parent="CanvasLayer/HUD/VBox/StatsRow"]
 layout_mode = 2
-text = "Cells"
+text = "Targets"
 
 [node name="EnemiesValue" type="Label" parent="CanvasLayer/HUD/VBox/StatsRow"]
 layout_mode = 2
@@ -323,9 +393,9 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_player_bg")
 layout_mode = 0
 offset_left = 10.0
 offset_top = 8.0
-offset_right = 360.0
+offset_right = 390.0
 offset_bottom = 32.0
-text = "Combat room engaged"
+text = "Test combat room engaged"
 
 [node name="Hint" type="Label" parent="CanvasLayer/HUD/VBox"]
 layout_mode = 2

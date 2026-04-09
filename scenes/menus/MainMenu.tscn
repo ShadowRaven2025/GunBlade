@@ -1,6 +1,18 @@
-[gd_scene load_steps=2 format=3 uid="uid://main_menu"]
+[gd_scene load_steps=4 format=3 uid="uid://main_menu"]
 
 [ext_resource type="Script" path="res://scripts/ui/MainMenu.gd" id="1_menu"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
+bg_color = Color(0.06, 0.07, 0.1, 0.92)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.45, 0.36, 0.23, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -11,36 +23,72 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="ColorRect" type="ColorRect" parent="."]
+[node name="Backdrop" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.1, 0.1, 0.15, 1)
+color = Color(0.04, 0.05, 0.07, 1)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="Glow" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -100.0
-offset_top = -100.0
-offset_right = 100.0
-offset_bottom = 100.0
+offset_left = -260.0
+offset_top = -150.0
+offset_right = 260.0
+offset_bottom = 150.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0.19, 0.16, 0.11, 0.16)
 
-[node name="Title" type="Label" parent="VBoxContainer"]
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -170.0
+offset_right = 220.0
+offset_bottom = 170.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu_panel")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 0
+offset_left = 28.0
+offset_top = 26.0
+offset_right = 412.0
+offset_bottom = 314.0
+theme_override_constants/separation = 14
+
+[node name="Eyebrow" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "MEDIEVAL ROGUELIKE PROTOTYPE"
+
+[node name="Title" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
 text = "GunBlade"
-horizontal_alignment = 1
 
-[node name="NewGame" type="Button" parent="VBoxContainer"]
+[node name="Subtitle" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "New Game"
+autowrap_mode = 3
+text = "Descend into a sealed room, cut through the mob, and hold the line long enough to earn the next floor."
 
-[node name="Quit" type="Button" parent="VBoxContainer"]
+[node name="NewGame" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Quit"
+text = "Enter The Dungeon"
+
+[node name="Quit" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Abandon Run"
+
+[node name="Hint" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "WASD move  |  LMB strike  |  Esc retreat"

@@ -1,0 +1,109 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/CharacterSelect.gd" id="1_select"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png" id="2_warrior"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Archer/Archer_Idle.png" id="3_archer"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Idle.png" id="4_monk"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.05, 0.06, 0.09, 0.94)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.78, 0.47, 0.22, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[node name="CharacterSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_select")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.03, 0.04, 0.06, 1)
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -470.0
+offset_top = -250.0
+offset_right = 470.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBox" type="VBoxContainer" parent="Panel"]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 22.0
+offset_right = 914.0
+offset_bottom = 470.0
+theme_override_constants/separation = 20
+
+[node name="Header" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Panel/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Choose Your Prisoner"
+
+[node name="BackButton" type="Button" parent="Panel/VBox/Header"]
+layout_mode = 2
+text = "Back"
+
+[node name="Subtitle" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "Pick a test hero for the vertical slice. Each one uses a different sprite set and slightly different combat stats."
+autowrap_mode = 3
+
+[node name="Cards" type="HBoxContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="WarriorButton" type="Button" parent="Panel/VBox/Cards"]
+custom_minimum_size = Vector2(280, 320)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Warrior\nHeavy melee\nHigh health"
+icon = ExtResource("2_warrior")
+expand_icon = true
+icon_alignment = 1
+
+[node name="ArcherButton" type="Button" parent="Panel/VBox/Cards"]
+custom_minimum_size = Vector2(280, 320)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Archer\nFast striker\nLonger reach"
+icon = ExtResource("3_archer")
+expand_icon = true
+icon_alignment = 1
+
+[node name="MonkButton" type="Button" parent="Panel/VBox/Cards"]
+custom_minimum_size = Vector2(280, 320)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Monk\nBalanced mobility\nTechnical timing"
+icon = ExtResource("4_monk")
+expand_icon = true
+icon_alignment = 1
+
+[node name="Hint" type="Label" parent="Panel/VBox"]
+layout_mode = 2
+text = "After choosing a hero, the game starts in a dedicated test room."
