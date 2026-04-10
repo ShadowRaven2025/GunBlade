@@ -1,12 +1,21 @@
 extends Control
 
-const TEST_ROOM_SCENE := "res://scenes/game/levels/TestRoom.tscn"
+const TEST_ROOM_SCENE = "res://scenes/game/levels/TestRoom.tscn"
 
 func _ready():
 	$Panel/VBox/Header/BackButton.pressed.connect(_on_back_pressed)
-	$Panel/VBox/Cards/WarriorButton.pressed.connect(func(): _start_run("warrior"))
-	$Panel/VBox/Cards/ArcherButton.pressed.connect(func(): _start_run("archer"))
-	$Panel/VBox/Cards/MonkButton.pressed.connect(func(): _start_run("monk"))
+	$Panel/VBox/Cards/WarriorButton.pressed.connect(_on_warrior_pressed)
+	$Panel/VBox/Cards/ArcherButton.pressed.connect(_on_archer_pressed)
+	$Panel/VBox/Cards/MonkButton.pressed.connect(_on_monk_pressed)
+
+func _on_warrior_pressed():
+	_start_run("warrior")
+
+func _on_archer_pressed():
+	_start_run("archer")
+
+func _on_monk_pressed():
+	_start_run("monk")
 
 func _start_run(character_id: String):
 	Game.set_selected_character(character_id)

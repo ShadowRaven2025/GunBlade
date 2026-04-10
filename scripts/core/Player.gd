@@ -2,6 +2,8 @@ class_name Player extends CharacterBody2D
 
 signal died
 
+const ARROW_SCENE = preload("res://scenes/game/projectiles/Arrow.tscn")
+
 @export var speed: float = 260.0
 @export var jump_velocity: float = -420.0
 @export var gravity: float = 980.0
@@ -29,6 +31,8 @@ var jump_frame_count: int = 6
 var idle_texture: Texture2D
 var run_texture: Texture2D
 var attack_texture: Texture2D
+var attack_type: String = "melee"
+var attack_pose_frame: int = -1
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var health_bar: ProgressBar = $HealthBar
@@ -39,14 +43,27 @@ func _ready():
 	set_character_visuals(
 		"res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png",
 		"res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Run.png",
-		"res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Attack1.png"
+		"res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Attack1.png",
+		8,
+		6,
+		4,
+		2,
+		-1,
+		"melee"
 	)
 	_update_health_bar()
 
-func set_character_visuals(idle_path: String, run_path: String, attack_path: String):
+func set_character_visuals(idle_path: String, run_path: String, attack_path: String, idle_frames: int = 8, run_frames: int = 6, attack_frames: int = 4, hit_frame: int = 2, pose_frame: int = -1, next_attack_type: String = "melee"):
 	idle_texture = load(idle_path)
 	run_texture = load(run_path)
 	attack_texture = load(attack_path)
+	idle_frame_count = idle_frames
+	run_frame_count = run_frames
+	jump_frame_count = run_frames
+	attack_frame_count = attack_frames
+	attack_hit_frame = hit_frame
+	attack_pose_frame = pose_frame
+	attack_type = next_attack_type
 	sprite.texture = idle_texture
 	sprite.hframes = idle_frame_count
 	sprite.vframes = 1
@@ -83,7 +100,10 @@ func _animate(delta):
 	if anim_timer >= current_anim_speed:
 		anim_timer = 0.0
 		if is_attacking:
-			current_frame = min(current_frame + 1, current_frame_count - 1)
+			if attack_type == "ranged" and attack_pose_frame >= 0:
+				current_frame = mini(attack_pose_frame, current_frame_count - 1)
+			else:
+				current_frame = min(current_frame + 1, current_frame_count - 1)
 		else:
 			current_frame = (current_frame + 1) % current_frame_count
 	
@@ -128,7 +148,7 @@ func attack():
 	if hit_delay > 0.0:
 		await get_tree().create_timer(hit_delay).timeout
 	
-	_damage_enemies_in_attack()
+	_perform_attack_hit()
 	
 	var attack_animation_duration = attack_anim_speed * attack_frame_count
 	var recovery_time = max(attack_animation_duration - hit_delay, 0.0)
@@ -140,6 +160,12 @@ func attack():
 	if cooldown_delay > 0.0:
 		await get_tree().create_timer(cooldown_delay).timeout
 	can_attack = true
+
+func _perform_attack_hit():
+	if attack_type == "ranged":
+		_fire_arrow()
+		return
+	_damage_enemies_in_attack()
 
 func _damage_enemies_in_attack():
 	var attack_direction = Vector2.RIGHT * facing_direction
@@ -155,6 +181,12 @@ func _damage_enemies_in_attack():
 		var is_in_range = enemy.global_position.distance_to(attack_center) <= attack_hit_radius
 		if is_in_front and is_in_range:
 			enemy.take_damage(attack_damage)
+
+func _fire_arrow():
+	var arrow = ARROW_SCENE.instantiate()
+	get_parent().add_child(arrow)
+	arrow.global_position = global_position + Vector2(22.0 * facing_direction, -12.0)
+	arrow.setup(facing_direction, attack_damage)
 
 func _update_health_bar():
 	health_bar.max_value = max_health

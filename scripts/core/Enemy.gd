@@ -11,6 +11,9 @@ signal took_damage(amount: int)
 @export var attack_range: float = 48.0
 @export var gravity: float = 980.0
 @export var attack_cooldown: float = 1.0
+@export var use_ai: bool = true
+@export var respawn_on_death: bool = false
+@export var respawn_delay: float = 1.5
 
 var current_health: int
 var can_attack: bool = true
@@ -25,6 +28,7 @@ var anim_speed: float = 0.16
 var current_animation: String = "idle"
 var target_player: Player
 var facing_direction: float = -1.0
+var spawn_position: Vector2
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -32,6 +36,7 @@ var facing_direction: float = -1.0
 
 func _ready():
 	add_to_group("enemies")
+	spawn_position = global_position
 	current_health = max_health
 	idle_texture = load("res://assets/Tiny Swords (Free Pack)/Units/Purple Units/Pawn/Pawn_Idle.png")
 	run_texture = load("res://assets/Tiny Swords (Free Pack)/Units/Purple Units/Pawn/Pawn_Run.png")
@@ -43,6 +48,10 @@ func _ready():
 	_update_health_bar()
 
 func _physics_process(delta):
+	if not use_ai:
+		_physics_process_dummy(delta)
+		return
+	
 	if not is_instance_valid(target_player):
 		target_player = get_tree().get_first_node_in_group("player") as Player
 	
@@ -76,6 +85,20 @@ func _physics_process(delta):
 	_flip_sprite()
 	_set_animation("run" if absf(velocity.x) > 1.0 else "idle")
 	
+	anim_timer += delta
+	if anim_timer >= anim_speed:
+		anim_timer = 0.0
+		current_frame = (current_frame + 1) % current_frame_count
+		sprite.frame = current_frame
+
+func _physics_process_dummy(delta):
+	if not is_on_floor():
+		velocity.y += gravity * delta
+	else:
+		velocity.y = 0.0
+	velocity.x = 0.0
+	move_and_slide()
+	_set_animation("idle")
 	anim_timer += delta
 	if anim_timer >= anim_speed:
 		anim_timer = 0.0
@@ -120,5 +143,27 @@ func take_damage(amount: int):
 
 func die():
 	died.emit()
+	if respawn_on_death:
+		_respawn_after_delay()
+		return
 	collision_shape.disabled = true
 	queue_free()
+
+func _respawn_after_delay():
+	set_physics_process(false)
+	visible = false
+	collision_shape.disabled = true
+	await get_tree().create_timer(respawn_delay).timeout
+	global_position = spawn_position
+	current_health = max_health
+	can_attack = true
+	velocity = Vector2.ZERO
+	current_frame = 0
+	current_animation = "idle"
+	sprite.texture = idle_texture
+	sprite.hframes = idle_frame_count
+	sprite.frame = 0
+	_update_health_bar()
+	collision_shape.disabled = false
+	visible = true
+	set_physics_process(true)

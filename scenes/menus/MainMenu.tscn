@@ -79,11 +79,15 @@ text = "GunBlade"
 [node name="Subtitle" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
 autowrap_mode = 3
-text = "Descend into a sealed room, cut through the mob, and hold the line long enough to earn the next floor."
+text = "Pick a clean start path: begin a run through character select, or jump straight into a combat sandbox with a respawning dummy enemy."
 
 [node name="NewGame" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Enter The Dungeon"
+text = "New Run"
+
+[node name="TestRoom" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Test Room"
 
 [node name="Quit" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
@@ -91,4 +95,4 @@ text = "Abandon Run"
 
 [node name="Hint" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "WASD move  |  LMB strike  |  Esc retreat"
+text = "New Run opens character select  |  Test Room launches a sandbox instantly"

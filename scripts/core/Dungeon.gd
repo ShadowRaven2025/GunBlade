@@ -1,6 +1,7 @@
 extends Node2D
 
 const MAIN_MENU_SCENE := "res://scenes/menus/MainMenu.tscn"
+const TEST_ROOM_SCENE := "res://scenes/game/levels/TestRoom.tscn"
 
 @onready var player: Player = $Player
 @onready var room_status_label: Label = $CanvasLayer/HUD/VBox/TopRow/RoomStatus
@@ -27,7 +28,13 @@ func _apply_selected_character():
 	player.set_character_visuals(
 		config.get("idle", ""),
 		config.get("run", ""),
-		config.get("attack", "")
+		config.get("attack", ""),
+		config.get("idle_frames", 8),
+		config.get("run_frames", 6),
+		config.get("attack_frames", 4),
+		config.get("attack_hit_frame", 2),
+		config.get("attack_pose_frame", -1),
+		config.get("attack_type", "melee")
 	)
 	player._update_health_bar()
 
@@ -47,11 +54,21 @@ func _process(_delta):
 
 func _update_hud():
 	var enemies_left := _get_alive_enemy_count()
-	floor_value_label.text = "01"
+	var is_test_room := scene_file_path == TEST_ROOM_SCENE
+	floor_value_label.text = "T1" if is_test_room else "01"
 	enemies_value_label.text = str(enemies_left)
 	if player == null or not is_instance_valid(player):
 		state_label.text = "Run failed"
 		room_status_label.text = "The prison took you. Press Esc to retreat."
+		return
+	
+	if is_test_room:
+		if enemies_left > 0:
+			state_label.text = "Dummy enemy respawns after death"
+			room_status_label.text = "Respawn dummy sandbox"
+		else:
+			state_label.text = "Respawn cycle pending"
+			room_status_label.text = "Dummy enemy will return shortly"
 		return
 	
 	if enemies_left > 0:
