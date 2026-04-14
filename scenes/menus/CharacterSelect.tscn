@@ -118,4 +118,4 @@ icon_alignment = 1
 
 [node name="Hint" type="Label" parent="Panel/VBox"]
 layout_mode = 2
-text = "After choosing a hero, the game starts in a dedicated test room."
+text = "After choosing a hero, the game starts in the opening chamber."

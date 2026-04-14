@@ -14,6 +14,7 @@ signal took_damage(amount: int)
 @export var use_ai: bool = true
 @export var respawn_on_death: bool = false
 @export var respawn_delay: float = 1.5
+@export var knockback_recovery: float = 1800.0
 
 var current_health: int
 var can_attack: bool = true
@@ -29,6 +30,8 @@ var current_animation: String = "idle"
 var target_player: Player
 var facing_direction: float = -1.0
 var spawn_position: Vector2
+var knockback_velocity: Vector2 = Vector2.ZERO
+var knockback_time_left: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -59,6 +62,14 @@ func _physics_process(delta):
 		velocity.y += gravity * delta
 	else:
 		velocity.y = 0.0
+
+	if knockback_time_left > 0.0:
+		_apply_knockback_motion(delta)
+		move_and_slide()
+		_flip_sprite()
+		_set_animation("idle")
+		_advance_animation(delta)
+		return
 	
 	var move_direction := 0.0
 	if is_instance_valid(target_player):
@@ -84,26 +95,36 @@ func _physics_process(delta):
 	move_and_slide()
 	_flip_sprite()
 	_set_animation("run" if absf(velocity.x) > 1.0 else "idle")
-	
-	anim_timer += delta
-	if anim_timer >= anim_speed:
-		anim_timer = 0.0
-		current_frame = (current_frame + 1) % current_frame_count
-		sprite.frame = current_frame
+	_advance_animation(delta)
 
 func _physics_process_dummy(delta):
 	if not is_on_floor():
 		velocity.y += gravity * delta
 	else:
 		velocity.y = 0.0
+	if knockback_time_left > 0.0:
+		_apply_knockback_motion(delta)
+	else:
+		velocity.x = 0.0
 	velocity.x = 0.0
 	move_and_slide()
 	_set_animation("idle")
+	_advance_animation(delta)
+
+func _advance_animation(delta):
 	anim_timer += delta
 	if anim_timer >= anim_speed:
 		anim_timer = 0.0
 		current_frame = (current_frame + 1) % current_frame_count
 		sprite.frame = current_frame
+
+func _apply_knockback_motion(delta):
+	knockback_time_left = max(knockback_time_left - delta, 0.0)
+	velocity.x = knockback_velocity.x
+	if knockback_velocity.y < 0.0:
+		velocity.y = knockback_velocity.y
+	knockback_velocity.x = move_toward(knockback_velocity.x, 0.0, knockback_recovery * delta)
+	knockback_velocity.y = move_toward(knockback_velocity.y, 0.0, knockback_recovery * delta)
 
 func attack(player: Player):
 	can_attack = false
@@ -149,6 +170,12 @@ func die():
 	collision_shape.disabled = true
 	queue_free()
 
+func apply_knockback(force: Vector2, duration: float = 0.18):
+	knockback_velocity = force
+	knockback_time_left = duration
+	if force.x != 0.0:
+		facing_direction = sign(force.x)
+
 func _respawn_after_delay():
 	set_physics_process(false)
 	visible = false
@@ -158,6 +185,8 @@ func _respawn_after_delay():
 	current_health = max_health
 	can_attack = true
 	velocity = Vector2.ZERO
+	knockback_velocity = Vector2.ZERO
+	knockback_time_left = 0.0
 	current_frame = 0
 	current_animation = "idle"
 	sprite.texture = idle_texture

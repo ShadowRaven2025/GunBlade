@@ -14,6 +14,12 @@ const ARROW_SCENE = preload("res://scenes/game/projectiles/Arrow.tscn")
 @export var attack_cooldown: float = 0.45
 @export var attack_anim_speed: float = 0.12
 @export var attack_hit_frame: int = 2
+@export var kick_damage: int = 8
+@export var kick_range: float = 34.0
+@export var kick_hit_radius: float = 34.0
+@export var kick_cooldown: float = 0.52
+@export var kick_hit_frame: int = 1
+@export var kick_knockback_force: float = 340.0
 
 var current_health: int
 var can_attack: bool = true
@@ -33,6 +39,7 @@ var run_texture: Texture2D
 var attack_texture: Texture2D
 var attack_type: String = "melee"
 var attack_pose_frame: int = -1
+var current_attack_mode: String = "primary"
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var health_bar: ProgressBar = $HealthBar
@@ -91,8 +98,10 @@ func _physics_process(delta):
 	move_and_slide()
 	_animate(delta)
 	
-	if Input.is_action_just_pressed("attack") and can_attack:
-		attack()
+	if Input.is_action_just_pressed("kick") and can_attack:
+		attack("kick")
+	elif Input.is_action_just_pressed("attack") and can_attack:
+		attack("primary")
 
 func _animate(delta):
 	anim_timer += delta
@@ -100,7 +109,7 @@ func _animate(delta):
 	if anim_timer >= current_anim_speed:
 		anim_timer = 0.0
 		if is_attacking:
-			if attack_type == "ranged" and attack_pose_frame >= 0:
+			if current_attack_mode == "primary" and attack_type == "ranged" and attack_pose_frame >= 0:
 				current_frame = mini(attack_pose_frame, current_frame_count - 1)
 			else:
 				current_frame = min(current_frame + 1, current_frame_count - 1)
@@ -136,32 +145,45 @@ func _set_animation(animation_name: String, texture: Texture2D, frame_count: int
 func _flip_sprite():
 	sprite.flip_h = facing_direction < 0.0
 
-func attack():
+func attack(mode: String = "primary"):
 	can_attack = false
 	is_attacking = true
+	current_attack_mode = mode
 	anim_timer = 0.0
 	current_frame = 0
-	_set_animation("attack", attack_texture, attack_frame_count)
+	var animation_frames := _get_attack_frame_count()
+	_set_animation("attack", attack_texture, animation_frames)
 	sprite.frame = 0
 	
-	var hit_delay = attack_anim_speed * clampi(attack_hit_frame, 0, attack_frame_count - 1)
+	var hit_frame := attack_hit_frame if current_attack_mode == "primary" else kick_hit_frame
+	var hit_delay = attack_anim_speed * clampi(hit_frame, 0, current_frame_count - 1)
 	if hit_delay > 0.0:
 		await get_tree().create_timer(hit_delay).timeout
 	
 	_perform_attack_hit()
 	
-	var attack_animation_duration = attack_anim_speed * attack_frame_count
+	var attack_animation_duration = attack_anim_speed * current_frame_count
 	var recovery_time = max(attack_animation_duration - hit_delay, 0.0)
 	if recovery_time > 0.0:
 		await get_tree().create_timer(recovery_time).timeout
 	
 	is_attacking = false
-	var cooldown_delay = max(attack_cooldown - attack_animation_duration, 0.0)
+	var total_cooldown := attack_cooldown if current_attack_mode == "primary" else kick_cooldown
+	var cooldown_delay = max(total_cooldown - attack_animation_duration, 0.0)
+	current_attack_mode = "primary"
 	if cooldown_delay > 0.0:
 		await get_tree().create_timer(cooldown_delay).timeout
 	can_attack = true
 
+func _get_attack_frame_count() -> int:
+	if current_attack_mode == "kick":
+		return mini(4, attack_frame_count)
+	return attack_frame_count
+
 func _perform_attack_hit():
+	if current_attack_mode == "kick":
+		_kick_enemies_in_attack()
+		return
 	if attack_type == "ranged":
 		_fire_arrow()
 		return
@@ -182,11 +204,28 @@ func _damage_enemies_in_attack():
 		if is_in_front and is_in_range:
 			enemy.take_damage(attack_damage)
 
+func _kick_enemies_in_attack():
+	var attack_center = global_position + Vector2(kick_range * facing_direction, -6.0)
+	for node in get_parent().get_children():
+		if not (node is Enemy):
+			continue
+		var enemy := node as Enemy
+		if not is_instance_valid(enemy):
+			continue
+		var to_enemy = enemy.global_position - global_position
+		var is_in_front = sign(to_enemy.x) == sign(facing_direction) or absf(to_enemy.x) < 6.0
+		var is_in_range = enemy.global_position.distance_to(attack_center) <= kick_hit_radius
+		if is_in_front and is_in_range:
+			enemy.take_damage(kick_damage)
+			enemy.apply_knockback(Vector2(kick_knockback_force * facing_direction, -120.0))
+
 func _fire_arrow():
 	var arrow = ARROW_SCENE.instantiate()
 	get_parent().add_child(arrow)
-	arrow.global_position = global_position + Vector2(22.0 * facing_direction, -12.0)
-	arrow.setup(facing_direction, attack_damage)
+	var spawn_offset := Vector2(18.0 * facing_direction, -30.0)
+	var launch_velocity := Vector2(430.0 * facing_direction, -210.0)
+	arrow.global_position = sprite.global_position + spawn_offset
+	arrow.setup(facing_direction, attack_damage, launch_velocity)
 
 func _update_health_bar():
 	health_bar.max_value = max_health

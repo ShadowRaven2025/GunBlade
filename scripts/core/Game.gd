@@ -1,5 +1,14 @@
 extends Node
 
+const MAX_FLOOR := 5
+const FLOOR_SCENES := {
+	1: "res://scenes/game/levels/Dungeon.tscn",
+	2: "res://scenes/game/levels/IronFoundry.tscn",
+	3: "res://scenes/game/levels/MoonCrypt.tscn",
+	4: "res://scenes/game/levels/BrokenRampart.tscn",
+	5: "res://scenes/game/levels/WardenThrone.tscn"
+}
+
 var current_floor: int = 1
 var gold: int = 0
 var current_run_data: Dictionary = {}
@@ -92,7 +101,20 @@ func get_selected_character_config() -> Dictionary:
 	return CHARACTER_CONFIGS.get(selected_character, CHARACTER_CONFIGS["warrior"])
 
 func next_floor():
-	current_floor += 1
+	current_floor = mini(current_floor + 1, MAX_FLOOR)
+	current_run_data["floor"] = current_floor
+	save_game()
+
+func get_floor_scene_path(floor: int = current_floor) -> String:
+	var normalized_floor := clampi(floor, 1, MAX_FLOOR)
+	return FLOOR_SCENES.get(normalized_floor, FLOOR_SCENES[1])
+
+func is_boss_floor(floor: int = current_floor) -> bool:
+	return floor >= MAX_FLOOR
+
+func complete_run():
+	current_run_data["last_completed_floor"] = MAX_FLOOR
+	current_floor = 1
 	current_run_data["floor"] = current_floor
 	save_game()
 

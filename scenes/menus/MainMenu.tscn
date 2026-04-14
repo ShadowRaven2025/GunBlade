@@ -79,7 +79,7 @@ text = "GunBlade"
 [node name="Subtitle" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
 autowrap_mode = 3
-text = "Pick a clean start path: begin a run through character select, or jump straight into a combat sandbox with a respawning dummy enemy."
+text = "Pick a clean start path: begin a run through character select, or jump straight into the starting chamber before the first descent."
 
 [node name="NewGame" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
@@ -87,7 +87,7 @@ text = "New Run"
 
 [node name="TestRoom" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "Test Room"
+text = "Start Room"
 
 [node name="Quit" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
@@ -95,4 +95,4 @@ text = "Abandon Run"
 
 [node name="Hint" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
-text = "New Run opens character select  |  Test Room launches a sandbox instantly"
+text = "New Run opens character select  |  Start Room launches the opening chamber instantly"

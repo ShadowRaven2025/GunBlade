@@ -1,4 +1,4 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/Dungeon.gd" id="1_dungeon"]
 [ext_resource type="Script" path="res://scripts/core/Player.gd" id="2_player"]
@@ -7,8 +7,8 @@
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/Castle.png" id="5_castle"]
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/Tower.png" id="6_tower"]
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/House2.png" id="7_house"]
-[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/cut/Banners/Banner_0_3.png" id="8_banner"]
-[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/UI Elements/Wood Table/WoodTable.png" id="9_wood_table"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/Barracks.png" id="8_barracks"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/cut/Banners/Banner_0_3.png" id="9_banner"]
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Particle FX/Fire_01.png" id="10_fire"]
 
 [sub_resource type="RectangleShape2D" id="Shape_player"]
@@ -17,14 +17,20 @@ size = Vector2(28, 44)
 [sub_resource type="RectangleShape2D" id="Shape_ground"]
 size = Vector2(1240, 28)
 
-[sub_resource type="RectangleShape2D" id="Shape_platform_wide"]
-size = Vector2(158, 20)
-
-[sub_resource type="RectangleShape2D" id="Shape_platform_mid"]
-size = Vector2(118, 20)
-
 [sub_resource type="RectangleShape2D" id="Shape_wall"]
 size = Vector2(28, 330)
+
+[sub_resource type="RectangleShape2D" id="Shape_platform_wide"]
+size = Vector2(248, 20)
+
+[sub_resource type="RectangleShape2D" id="Shape_platform_mid"]
+size = Vector2(164, 20)
+
+[sub_resource type="RectangleShape2D" id="Shape_platform_small"]
+size = Vector2(116, 20)
+
+[sub_resource type="RectangleShape2D" id="Shape_exit"]
+size = Vector2(74, 120)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_player_fill"]
 bg_color = Color(0.26, 0.82, 0.46, 1)
@@ -58,58 +64,113 @@ script = ExtResource("1_dungeon")
 [node name="Backdrop" type="ColorRect" parent="."]
 offset_right = 1280.0
 offset_bottom = 720.0
-color = Color(0.03, 0.04, 0.06, 1)
+color = Color(0.025, 0.02, 0.03, 1)
+
+[node name="SmokeGlow" type="ColorRect" parent="."]
+offset_left = 98.0
+offset_top = 42.0
+offset_right = 1182.0
+offset_bottom = 324.0
+color = Color(0.22, 0.08, 0.08, 0.14)
+
+[node name="HeatBand" type="ColorRect" parent="."]
+offset_left = 68.0
+offset_top = 252.0
+offset_right = 1212.0
+offset_bottom = 704.0
+color = Color(0.26, 0.07, 0.05, 0.1)
 
 [node name="BackgroundCastle" type="Sprite2D" parent="."]
-position = Vector2(640, 274)
-scale = Vector2(3.2, 3.2)
-modulate = Color(0.42, 0.42, 0.5, 0.22)
+position = Vector2(650, 216)
+scale = Vector2(3.6, 3.6)
+modulate = Color(0.38, 0.32, 0.34, 0.16)
 texture = ExtResource("5_castle")
 
 [node name="BackgroundTowerLeft" type="Sprite2D" parent="."]
-position = Vector2(162, 332)
-scale = Vector2(2.8, 2.8)
-modulate = Color(0.4, 0.4, 0.48, 0.18)
+position = Vector2(150, 286)
+scale = Vector2(2.9, 2.9)
+modulate = Color(0.42, 0.32, 0.34, 0.18)
 texture = ExtResource("6_tower")
 
 [node name="BackgroundTowerRight" type="Sprite2D" parent="."]
-position = Vector2(1116, 338)
-scale = Vector2(2.8, 2.8)
-modulate = Color(0.4, 0.4, 0.48, 0.18)
+position = Vector2(1130, 304)
+scale = Vector2(3.1, 3.1)
+modulate = Color(0.42, 0.32, 0.34, 0.18)
 texture = ExtResource("6_tower")
 
-[node name="BackgroundHouseLeft" type="Sprite2D" parent="."]
-position = Vector2(314, 556)
+[node name="BarracksLeft" type="Sprite2D" parent="."]
+position = Vector2(256, 514)
+scale = Vector2(2.5, 2.5)
+modulate = Color(0.46, 0.32, 0.28, 0.16)
+texture = ExtResource("8_barracks")
+
+[node name="BarracksRight" type="Sprite2D" parent="."]
+position = Vector2(1012, 500)
 scale = Vector2(2.4, 2.4)
-modulate = Color(0.52, 0.45, 0.42, 0.2)
+modulate = Color(0.46, 0.32, 0.28, 0.16)
+texture = ExtResource("8_barracks")
+
+[node name="HouseLeft" type="Sprite2D" parent="."]
+position = Vector2(346, 612)
+scale = Vector2(2.1, 2.1)
+modulate = Color(0.46, 0.3, 0.26, 0.14)
 texture = ExtResource("7_house")
 
-[node name="BackgroundHouseRight" type="Sprite2D" parent="."]
-position = Vector2(972, 554)
-scale = Vector2(2.4, 2.4)
-modulate = Color(0.52, 0.45, 0.42, 0.2)
+[node name="HouseRight" type="Sprite2D" parent="."]
+position = Vector2(938, 596)
+scale = Vector2(2.1, 2.1)
+modulate = Color(0.46, 0.3, 0.26, 0.14)
 texture = ExtResource("7_house")
+
+[node name="BrokenHeader" type="ColorRect" parent="."]
+offset_left = 118.0
+offset_top = 118.0
+offset_right = 1162.0
+offset_bottom = 144.0
+color = Color(0.24, 0.1, 0.08, 0.8)
+
+[node name="WallLeftDecor" type="ColorRect" parent="."]
+offset_left = 76.0
+offset_top = 110.0
+offset_right = 116.0
+offset_bottom = 654.0
+color = Color(0.14, 0.1, 0.11, 0.86)
+
+[node name="WallRightDecor" type="ColorRect" parent="."]
+offset_left = 1164.0
+offset_top = 110.0
+offset_right = 1204.0
+offset_bottom = 654.0
+color = Color(0.14, 0.1, 0.11, 0.86)
 
 [node name="BannerLeft" type="Sprite2D" parent="."]
-position = Vector2(132, 164)
-scale = Vector2(2.6, 2.6)
-texture = ExtResource("8_banner")
+position = Vector2(146, 166)
+scale = Vector2(2.8, 2.8)
+modulate = Color(0.92, 0.56, 0.34, 1)
+texture = ExtResource("9_banner")
 
 [node name="BannerRight" type="Sprite2D" parent="."]
-position = Vector2(1148, 164)
-scale = Vector2(-2.6, 2.6)
-texture = ExtResource("8_banner")
+position = Vector2(1134, 166)
+scale = Vector2(-2.8, 2.8)
+modulate = Color(0.92, 0.56, 0.34, 1)
+texture = ExtResource("9_banner")
 
 [node name="FireLeft" type="Sprite2D" parent="."]
-position = Vector2(182, 584)
+position = Vector2(194, 570)
+scale = Vector2(2.3, 2.3)
+modulate = Color(1, 0.62, 0.28, 0.9)
+texture = ExtResource("10_fire")
+
+[node name="FireCenter" type="Sprite2D" parent="."]
+position = Vector2(642, 472)
 scale = Vector2(2.2, 2.2)
-modulate = Color(1, 0.72, 0.42, 0.85)
+modulate = Color(1, 0.54, 0.24, 0.78)
 texture = ExtResource("10_fire")
 
 [node name="FireRight" type="Sprite2D" parent="."]
-position = Vector2(1096, 584)
-scale = Vector2(2.2, 2.2)
-modulate = Color(1, 0.72, 0.42, 0.85)
+position = Vector2(1088, 560)
+scale = Vector2(2.3, 2.3)
+modulate = Color(1, 0.62, 0.28, 0.9)
 texture = ExtResource("10_fire")
 
 [node name="Ground" type="StaticBody2D" parent="."]
@@ -118,20 +179,126 @@ position = Vector2(640, 652)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Ground"]
 shape = SubResource("Shape_ground")
 
-[node name="GroundVisualLeft" type="Sprite2D" parent="."]
-position = Vector2(242, 664)
-scale = Vector2(5.0, 1.5)
-texture = ExtResource("9_wood_table")
+[node name="FloorCore" type="ColorRect" parent="."]
+offset_left = 20.0
+offset_top = 640.0
+offset_right = 1260.0
+offset_bottom = 720.0
+color = Color(0.18, 0.15, 0.18, 1)
 
-[node name="GroundVisualCenter" type="Sprite2D" parent="."]
-position = Vector2(640, 664)
-scale = Vector2(5.0, 1.5)
-texture = ExtResource("9_wood_table")
+[node name="FloorLavaGlow" type="ColorRect" parent="."]
+offset_left = 20.0
+offset_top = 626.0
+offset_right = 1260.0
+offset_bottom = 642.0
+color = Color(0.74, 0.28, 0.14, 0.92)
 
-[node name="GroundVisualRight" type="Sprite2D" parent="."]
-position = Vector2(1038, 664)
-scale = Vector2(5.0, 1.5)
-texture = ExtResource("9_wood_table")
+[node name="FloorLip" type="ColorRect" parent="."]
+offset_left = 20.0
+offset_top = 618.0
+offset_right = 1260.0
+offset_bottom = 626.0
+color = Color(0.9, 0.56, 0.18, 0.96)
+
+[node name="CrackedRiseLeft" type="StaticBody2D" parent="."]
+position = Vector2(302, 534)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CrackedRiseLeft"]
+shape = SubResource("Shape_platform_wide")
+
+[node name="CrackedRiseLeftTop" type="ColorRect" parent="."]
+offset_left = 178.0
+offset_top = 524.0
+offset_right = 426.0
+offset_bottom = 542.0
+color = Color(0.74, 0.34, 0.18, 0.96)
+
+[node name="CrackedRiseLeftFace" type="ColorRect" parent="."]
+offset_left = 178.0
+offset_top = 542.0
+offset_right = 426.0
+offset_bottom = 590.0
+color = Color(0.2, 0.12, 0.12, 0.98)
+
+[node name="CentralSpur" type="StaticBody2D" parent="."]
+position = Vector2(640, 456)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CentralSpur"]
+shape = SubResource("Shape_platform_mid")
+
+[node name="CentralSpurTop" type="ColorRect" parent="."]
+offset_left = 558.0
+offset_top = 446.0
+offset_right = 722.0
+offset_bottom = 464.0
+color = Color(0.84, 0.42, 0.18, 0.96)
+
+[node name="CentralSpurFace" type="ColorRect" parent="."]
+offset_left = 558.0
+offset_top = 464.0
+offset_right = 722.0
+offset_bottom = 512.0
+color = Color(0.22, 0.12, 0.12, 0.98)
+
+[node name="CrackedRiseRight" type="StaticBody2D" parent="."]
+position = Vector2(978, 534)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="CrackedRiseRight"]
+shape = SubResource("Shape_platform_wide")
+
+[node name="CrackedRiseRightTop" type="ColorRect" parent="."]
+offset_left = 854.0
+offset_top = 524.0
+offset_right = 1102.0
+offset_bottom = 542.0
+color = Color(0.74, 0.34, 0.18, 0.96)
+
+[node name="CrackedRiseRightFace" type="ColorRect" parent="."]
+offset_left = 854.0
+offset_top = 542.0
+offset_right = 1102.0
+offset_bottom = 590.0
+color = Color(0.2, 0.12, 0.12, 0.98)
+
+[node name="UpperShelfLeft" type="StaticBody2D" parent="."]
+position = Vector2(430, 334)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="UpperShelfLeft"]
+shape = SubResource("Shape_platform_small")
+
+[node name="UpperShelfLeftTop" type="ColorRect" parent="."]
+offset_left = 372.0
+offset_top = 324.0
+offset_right = 488.0
+offset_bottom = 342.0
+color = Color(0.8, 0.38, 0.16, 0.96)
+
+[node name="UpperShelfLeftFace" type="ColorRect" parent="."]
+offset_left = 372.0
+offset_top = 342.0
+offset_right = 488.0
+offset_bottom = 366.0
+color = Color(0.22, 0.12, 0.12, 0.98)
+
+[node name="UpperShelfRight" type="StaticBody2D" parent="."]
+position = Vector2(844, 300)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="UpperShelfRight"]
+shape = SubResource("Shape_platform_small")
+
+[node name="UpperShelfRightTop" type="ColorRect" parent="."]
+offset_left = 786.0
+offset_top = 290.0
+offset_right = 902.0
+offset_bottom = 308.0
+color = Color(0.8, 0.38, 0.16, 0.96)
+
+[node name="UpperShelfRightFace" type="ColorRect" parent="."]
+offset_left = 786.0
+offset_top = 308.0
+offset_right = 902.0
+offset_bottom = 332.0
+color = Color(0.22, 0.12, 0.12, 0.98)
 
 [node name="LeftWall" type="StaticBody2D" parent="."]
 position = Vector2(48, 378)
@@ -145,52 +312,8 @@ position = Vector2(1232, 378)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall"]
 shape = SubResource("Shape_wall")
 
-[node name="LeftPlatform" type="StaticBody2D" parent="."]
-position = Vector2(296, 522)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftPlatform"]
-shape = SubResource("Shape_platform_wide")
-
-[node name="LeftPlatformVisual" type="Sprite2D" parent="."]
-position = Vector2(296, 526)
-scale = Vector2(1.3, 0.48)
-texture = ExtResource("9_wood_table")
-
-[node name="CenterPlatform" type="StaticBody2D" parent="."]
-position = Vector2(640, 430)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="CenterPlatform"]
-shape = SubResource("Shape_platform_mid")
-
-[node name="CenterPlatformVisual" type="Sprite2D" parent="."]
-position = Vector2(640, 434)
-scale = Vector2(1.0, 0.48)
-texture = ExtResource("9_wood_table")
-
-[node name="RightPlatform" type="StaticBody2D" parent="."]
-position = Vector2(962, 314)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="RightPlatform"]
-shape = SubResource("Shape_platform_wide")
-
-[node name="RightPlatformVisual" type="Sprite2D" parent="."]
-position = Vector2(962, 318)
-scale = Vector2(1.3, 0.48)
-texture = ExtResource("9_wood_table")
-
-[node name="UpperLeftPlatform" type="StaticBody2D" parent="."]
-position = Vector2(404, 252)
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="UpperLeftPlatform"]
-shape = SubResource("Shape_platform_mid")
-
-[node name="UpperLeftPlatformVisual" type="Sprite2D" parent="."]
-position = Vector2(404, 256)
-scale = Vector2(1.0, 0.48)
-texture = ExtResource("9_wood_table")
-
 [node name="Player" type="CharacterBody2D" parent="."]
-position = Vector2(164, 592)
+position = Vector2(156, 592)
 script = ExtResource("2_player")
 speed = 280.0
 jump_velocity = -470.0
@@ -223,7 +346,7 @@ theme_override_styles/background = SubResource("StyleBoxFlat_player_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_player_fill")
 
 [node name="Enemy" parent="." instance=ExtResource("4_enemy")]
-position = Vector2(552, 390)
+position = Vector2(326, 480)
 max_health = 32
 damage = 12
 speed = 88.0
@@ -232,22 +355,51 @@ attack_range = 46.0
 gravity = 1040.0
 
 [node name="Enemy2" parent="." instance=ExtResource("4_enemy")]
-position = Vector2(1004, 274)
+position = Vector2(642, 402)
 max_health = 28
 damage = 10
-speed = 96.0
+speed = 94.0
 follow_range = 520.0
 attack_range = 46.0
 gravity = 1040.0
 
 [node name="Enemy3" parent="." instance=ExtResource("4_enemy")]
-position = Vector2(746, 592)
+position = Vector2(844, 246)
 max_health = 36
 damage = 14
 speed = 82.0
 follow_range = 520.0
 attack_range = 52.0
 gravity = 1040.0
+
+[node name="ExitGlow" type="ColorRect" parent="."]
+offset_left = 1078.0
+offset_top = 506.0
+offset_right = 1156.0
+offset_bottom = 640.0
+color = Color(0.9, 0.42, 0.14, 0.34)
+
+[node name="ExitFrame" type="ColorRect" parent="."]
+offset_left = 1068.0
+offset_top = 498.0
+offset_right = 1166.0
+offset_bottom = 646.0
+color = Color(0.32, 0.16, 0.1, 0.76)
+
+[node name="ExitLintel" type="ColorRect" parent="."]
+offset_left = 1058.0
+offset_top = 482.0
+offset_right = 1176.0
+offset_bottom = 500.0
+color = Color(0.92, 0.6, 0.22, 0.92)
+
+[node name="ExitArea" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 1
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ExitArea"]
+position = Vector2(1117, 578)
+shape = SubResource("Shape_exit")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 current = true
@@ -292,7 +444,7 @@ text = "Prison Depths"
 
 [node name="RoomStatus" type="Label" parent="CanvasLayer/HUD/VBox/TopRow"]
 layout_mode = 2
-text = "Sweep the platform"
+text = "Sweep the broken ascent"
 horizontal_alignment = 2
 
 [node name="StatsRow" type="GridContainer" parent="CanvasLayer/HUD/VBox"]

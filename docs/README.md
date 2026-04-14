@@ -2,7 +2,7 @@
 
 ## Project Summary
 
-GunBlade is a Godot 4 action roguelike prototype with a menu-driven entry point and a single playable dungeon scene. The current repository state implements a vertical slice focused on core movement, melee combat, basic enemy pursuit, and simple run persistence.
+GunBlade is a Godot 4 action roguelike prototype with a menu-driven entry point, a start room, and a combat room linked into a minimal run loop. The current repository state implements a vertical slice focused on movement, melee and ranged combat, room progression, and simple run persistence.
 
 ## Runtime Entry Points
 
@@ -11,16 +11,17 @@ GunBlade is a Godot 4 action roguelike prototype with a menu-driven entry point 
 | Project config | `project.godot` | Defines engine settings, input actions, window configuration, and the main scene. |
 | Main menu | `scenes/menus/MainMenu.tscn` | First screen shown on startup. |
 | Main menu logic | `scripts/ui/MainMenu.gd` | Starts a new run or exits the game. |
-| Game scene | `scenes/game/levels/Dungeon.tscn` | Current playable level used for the prototype. |
+| Start room | `scenes/game/levels/TestRoom.tscn` | Opening chamber where the player clears a guard and unlocks the descent gate. |
+| Combat room | `scenes/game/levels/Dungeon.tscn` | Main combat arena cleared before claiming the next floor. |
 
 ## Core Gameplay Modules
 
 | Module | Paths | Responsibility |
 | --- | --- | --- |
-| Player | `scenes/game/characters/Player.tscn`, `scripts/core/Player.gd` | Handles movement, sprite flipping, frame-based animation, melee attack timing, health, and death. |
-| Enemy | `scenes/game/characters/Enemy.tscn`, `scripts/core/Enemy.gd` | Handles player detection, pursuit, attack cadence, damage reaction, and death. |
-| Camera | `scenes/shared/Camera.tscn`, `scripts/core/Camera.gd` | Shared camera scene for following gameplay action. |
-| Run state | `scripts/core/Game.gd` | Stores current floor, gold, and minimal run progress in `user://savegame.dat`. |
+| Player | `scenes/game/characters/Player.tscn`, `scripts/core/Player.gd` | Handles movement, jump physics, sprite flipping, frame-based animation, melee attacks, ranged arrows, health, and death. |
+| Enemy | `scenes/game/characters/Enemy.tscn`, `scripts/core/Enemy.gd` | Handles player detection, pursuit, attack cadence, damage reaction, optional dummy mode, and death. |
+| Room flow | `scripts/core/Dungeon.gd` | Applies selected character stats, updates room HUD, tracks living enemies, and handles room-to-room gate transitions. |
+| Run state | `scripts/core/Game.gd` | Stores selected character, current floor, gold, and minimal run progress in `user://savegame.dat`. |
 
 ## Supporting Assets And Resources
 
@@ -32,11 +33,11 @@ GunBlade is a Godot 4 action roguelike prototype with a menu-driven entry point 
 
 ## Current Scope Boundaries
 
-- Implemented: startup menu, dungeon scene loading, player movement, player attack, enemy chase and attack, player/enemy health and death, simple persisted run state.
-- Not implemented in current codebase: class selection, procedural dungeon generation, inventory and equipment, alchemy, shops, boss flow, localization pipeline, full HUD, and production-ready save/load systems.
+- Implemented: startup menu, character select, start room, combat room, gate-based progression, player movement, melee and ranged attacks, enemy chase and attack, player/enemy health and death, and simple persisted run state.
+- Not implemented in current codebase: procedural dungeon generation, inventory and equipment, alchemy, shops, boss flow, localization pipeline, audio pipeline, and production-ready save/load systems.
 
 ## Architectural Notes
 
 - The project uses Godot scenes for composition and GDScript for gameplay logic.
 - Input actions currently cover directional movement and mouse attack.
-- The prototype mixes scene-authored nodes with script-driven behavior and remains at an early vertical-slice stage.
+- The prototype mixes scene-authored geometry with script-driven room state and remains at an early vertical-slice stage.

@@ -8,6 +8,10 @@ const TEST_ROOM_SCENE := "res://scenes/game/levels/TestRoom.tscn"
 @onready var floor_value_label: Label = $CanvasLayer/HUD/VBox/StatsRow/FloorValue
 @onready var enemies_value_label: Label = $CanvasLayer/HUD/VBox/StatsRow/EnemiesValue
 @onready var state_label: Label = $CanvasLayer/HUD/VBox/StatePanel/StateLabel
+@onready var hint_label: Label = $CanvasLayer/HUD/VBox/Hint
+@onready var exit_area: Area2D = get_node_or_null("ExitArea")
+
+var player_in_exit_area: bool = false
 
 func _ready():
 	_apply_selected_character()
@@ -15,6 +19,9 @@ func _ready():
 	player.died.connect(_on_player_died)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		enemy.died.connect(_on_enemy_died)
+	if exit_area != null:
+		exit_area.body_entered.connect(_on_exit_area_body_entered)
+		exit_area.body_exited.connect(_on_exit_area_body_exited)
 	_update_hud()
 
 func _apply_selected_character():
@@ -49,34 +56,85 @@ func _process(_delta):
 	if Input.is_action_just_pressed("ui_cancel"):
 		get_tree().change_scene_to_file(MAIN_MENU_SCENE)
 		return
+
+	if player_in_exit_area and _can_use_exit() and Input.is_action_just_pressed("interact"):
+		_use_exit()
+		return
 	
 	_update_hud()
 
 func _update_hud():
 	var enemies_left := _get_alive_enemy_count()
 	var is_test_room := scene_file_path == TEST_ROOM_SCENE
-	floor_value_label.text = "T1" if is_test_room else "01"
+	var is_boss_room := not is_test_room and Game.is_boss_floor()
+	floor_value_label.text = "T%s" % Game.current_floor if is_test_room else "%02d" % Game.current_floor
 	enemies_value_label.text = str(enemies_left)
+	hint_label.text = _get_hint_text(is_test_room, is_boss_room, enemies_left)
 	if player == null or not is_instance_valid(player):
 		state_label.text = "Run failed"
 		room_status_label.text = "The prison took you. Press Esc to retreat."
+		hint_label.text = "Esc retreat to menu"
 		return
 	
 	if is_test_room:
 		if enemies_left > 0:
-			state_label.text = "Dummy enemy respawns after death"
-			room_status_label.text = "Respawn dummy sandbox"
+			state_label.text = "Antechamber contested"
+			room_status_label.text = "Defeat the guard to reopen the descent gate"
 		else:
-			state_label.text = "Respawn cycle pending"
-			room_status_label.text = "Dummy enemy will return shortly"
+			state_label.text = "Descent gate open"
+			room_status_label.text = "Press E at the blue gate to descend"
+		return
+
+	if is_boss_room:
+		if enemies_left > 0:
+			state_label.text = "Boss encounter"
+			room_status_label.text = "Break the warden before he corners you"
+		else:
+			state_label.text = "Warden fallen"
+			room_status_label.text = "Press E at the crimson gate to finish the run"
 		return
 	
 	if enemies_left > 0:
 		state_label.text = "Combat room engaged"
-		room_status_label.text = "Sweep the platform: %s hostiles remain" % enemies_left
+		room_status_label.text = "Sweep the broken ascent: %s hostiles remain" % enemies_left
 	else:
-		state_label.text = "Platform secured"
-		room_status_label.text = "The route ahead is clear. Press Esc to retreat for now."
+		state_label.text = "Depth secured"
+		room_status_label.text = "Press E at the orange gate to claim the next floor"
+
+func _get_hint_text(is_test_room: bool, is_boss_room: bool, enemies_left: int) -> String:
+	if enemies_left <= 0 and player_in_exit_area:
+		return "E use gate  |  LMB attack  |  RMB kick  |  Esc retreat"
+	if is_test_room:
+		return "Clear the guard, then press E at the blue gate"
+	if is_boss_room:
+		return "LMB attack  |  RMB kick for knockback  |  Space jump"
+	if enemies_left > 0:
+		return "A D move  |  Space jump  |  LMB attack  |  RMB kick"
+	return "Room clear: reach the orange gate and press E"
+
+func _can_use_exit() -> bool:
+	return _get_alive_enemy_count() == 0
+
+func _use_exit():
+	if scene_file_path == TEST_ROOM_SCENE:
+		get_tree().change_scene_to_file(Game.get_floor_scene_path())
+		return
+	if Game.is_boss_floor():
+		Game.complete_run()
+		get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+		return
+	Game.next_floor()
+	get_tree().change_scene_to_file(TEST_ROOM_SCENE)
+
+func _on_exit_area_body_entered(body: Node):
+	if body == player:
+		player_in_exit_area = true
+		_update_hud()
+
+func _on_exit_area_body_exited(body: Node):
+	if body == player:
+		player_in_exit_area = false
+		_update_hud()
 
 func _get_alive_enemy_count() -> int:
 	var count := 0
