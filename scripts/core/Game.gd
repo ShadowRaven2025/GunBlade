@@ -1,6 +1,7 @@
 extends Node
 
 const MAX_FLOOR := 5
+const BOSS_REWARD_SCENE := "res://scenes/menus/BossReward.tscn"
 const FLOOR_SCENES := {
 	1: "res://scenes/game/levels/Dungeon.tscn",
 	2: "res://scenes/game/levels/IronFoundry.tscn",
@@ -8,6 +9,33 @@ const FLOOR_SCENES := {
 	4: "res://scenes/game/levels/BrokenRampart.tscn",
 	5: "res://scenes/game/levels/WardenThrone.tscn"
 }
+const BOSS_RELICS := [
+	{
+		"id": "ember_crown",
+		"title": "Ember Crown",
+		"description": "+35 gold and a hotter finish to the run"
+	},
+	{
+		"id": "iron_oath",
+		"title": "Iron Oath",
+		"description": "Marks the run with a warden-slayer relic"
+	},
+	{
+		"id": "moon_seal",
+		"title": "Moon Seal",
+		"description": "Locks in a crypt relic for the run record"
+	},
+	{
+		"id": "rampart_spur",
+		"title": "Rampart Spur",
+		"description": "+20 gold and a relic from the outer wall"
+	},
+	{
+		"id": "forgeblood_token",
+		"title": "Forgeblood Token",
+		"description": "+25 gold from the foundry stores"
+	}
+]
 
 var current_floor: int = 1
 var gold: int = 0
@@ -83,6 +111,7 @@ func new_game():
 		"character": selected_character,
 		"gold": 0,
 		"rooms_cleared": 0,
+		"pending_boss_rewards": [],
 		"runes": [],
 		"curses": [],
 		"relics": [],
@@ -115,6 +144,7 @@ func is_boss_floor(floor: int = current_floor) -> bool:
 
 func complete_run():
 	current_run_data["last_completed_floor"] = MAX_FLOOR
+	current_run_data["pending_boss_rewards"] = []
 	current_floor = 1
 	current_run_data["floor"] = current_floor
 	save_game()
@@ -130,6 +160,37 @@ func record_enemy_kill(amount: int = 1):
 
 func record_room_clear():
 	current_run_data["rooms_cleared"] = current_run_data.get("rooms_cleared", 0) + 1
+	save_game()
+
+func prepare_boss_rewards():
+	var options: Array = []
+	var start_index := (current_run_data.get("rooms_cleared", 0) + gold + current_floor) % BOSS_RELICS.size()
+	for i in range(3):
+		var relic := BOSS_RELICS[(start_index + i) % BOSS_RELICS.size()].duplicate(true)
+		options.append(relic)
+	current_run_data["pending_boss_rewards"] = options
+	save_game()
+
+func get_pending_boss_rewards() -> Array:
+	return current_run_data.get("pending_boss_rewards", [])
+
+func claim_boss_reward(relic_id: String):
+	var options: Array = get_pending_boss_rewards()
+	for relic in options:
+		if relic.get("id", "") != relic_id:
+			continue
+		var relics: Array = current_run_data.get("relics", [])
+		relics.append(relic)
+		current_run_data["relics"] = relics
+		current_run_data["last_boss_reward"] = relic
+		if relic_id == "ember_crown":
+			add_gold(35)
+		elif relic_id == "rampart_spur":
+			add_gold(20)
+		elif relic_id == "forgeblood_token":
+			add_gold(25)
+		break
+	current_run_data["pending_boss_rewards"] = []
 	save_game()
 
 func lose_gold():

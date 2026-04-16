@@ -4,6 +4,8 @@ extends CharacterBody2D
 signal died
 signal took_damage(amount: int)
 
+const ENEMY_SCENE := preload("res://scenes/game/characters/Enemy.tscn")
+
 @export var max_health: int = 30
 @export var damage: int = 10
 @export var speed: float = 90.0
@@ -23,6 +25,7 @@ signal took_damage(amount: int)
 @export var boss_leap_vertical: float = -320.0
 @export var boss_leap_cooldown: float = 2.6
 @export var boss_leap_duration: float = 0.5
+@export var boss_leap_telegraph_time: float = 0.38
 
 var current_health: int
 var can_attack: bool = true
@@ -43,10 +46,13 @@ var knockback_time_left: float = 0.0
 var boss_leap_ready: bool = true
 var boss_leap_time_left: float = 0.0
 var boss_phase_two_active: bool = false
+var boss_phase_two_summoned: bool = false
 var base_speed: float = 0.0
 var base_damage: int = 0
 var base_modulate: Color = Color(1, 1, 1, 1)
 var base_boss_leap_cooldown: float = 0.0
+var boss_telegraph_time_left: float = 0.0
+var boss_pending_leap_direction: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -68,6 +74,8 @@ func _ready():
 	sprite.frame = 0
 	current_frame_count = idle_frame_count
 	_update_health_bar()
+	if get_parent() != null and get_parent().has_method("register_enemy"):
+		get_parent().register_enemy(self)
 
 func _physics_process(delta):
 	if not use_ai:
@@ -90,8 +98,22 @@ func _physics_process(delta):
 		_advance_animation(delta)
 		return
 
+	if boss_telegraph_time_left > 0.0:
+		boss_telegraph_time_left = max(boss_telegraph_time_left - delta, 0.0)
+		velocity.x = 0.0
+		modulate = base_modulate.lerp(Color(1, 0.9, 0.55, 1), 0.55)
+		if boss_telegraph_time_left == 0.0:
+			_start_boss_leap(boss_pending_leap_direction)
+		move_and_slide()
+		_flip_sprite()
+		_set_animation("idle")
+		_advance_animation(delta)
+		return
+
 	if boss_leap_time_left > 0.0:
 		boss_leap_time_left = max(boss_leap_time_left - delta, 0.0)
+		if boss_leap_time_left == 0.0:
+			modulate = base_modulate if not boss_phase_two_active else base_modulate.lerp(Color(1, 0.25, 0.2, 1), 0.45)
 		move_and_slide()
 		_flip_sprite()
 		_set_animation("run")
@@ -104,10 +126,10 @@ func _physics_process(delta):
 		var horizontal_distance = absf(to_player.x)
 		var vertical_distance = absf(to_player.y)
 		if is_boss and _can_start_boss_leap(horizontal_distance, vertical_distance):
-			_start_boss_leap(sign(to_player.x))
+			_begin_boss_telegraph(sign(to_player.x))
 			move_and_slide()
 			_flip_sprite()
-			_set_animation("run")
+			_set_animation("idle")
 			_advance_animation(delta)
 			return
 		if horizontal_distance <= follow_range and vertical_distance <= 96.0:
@@ -212,7 +234,14 @@ func apply_knockback(force: Vector2, duration: float = 0.18):
 		facing_direction = sign(force.x)
 
 func _can_start_boss_leap(horizontal_distance: float, vertical_distance: float) -> bool:
-	return boss_leap_ready and is_on_floor() and horizontal_distance >= 120.0 and horizontal_distance <= 380.0 and vertical_distance <= 120.0
+	return boss_leap_ready and boss_telegraph_time_left <= 0.0 and is_on_floor() and horizontal_distance >= 120.0 and horizontal_distance <= 380.0 and vertical_distance <= 120.0
+
+func _begin_boss_telegraph(direction: float):
+	boss_pending_leap_direction = direction
+	if boss_pending_leap_direction == 0.0:
+		boss_pending_leap_direction = facing_direction
+	boss_telegraph_time_left = boss_leap_telegraph_time
+	boss_leap_ready = false
 
 func _start_boss_leap(direction: float):
 	var leap_direction := direction
@@ -241,6 +270,25 @@ func _try_activate_boss_phase_two():
 	damage = base_damage + boss_phase_two_damage_bonus
 	boss_leap_cooldown = max(boss_leap_cooldown - 0.8, 1.2)
 	modulate = base_modulate.lerp(Color(1, 0.25, 0.2, 1), 0.45)
+	if not boss_phase_two_summoned:
+		_summon_phase_two_reinforcements()
+		boss_phase_two_summoned = true
+
+func _summon_phase_two_reinforcements():
+	if get_parent() == null:
+		return
+	var summon_offsets := [Vector2(-170, -24), Vector2(170, -24)]
+	for offset in summon_offsets:
+		var summon = ENEMY_SCENE.instantiate() as Enemy
+		get_parent().add_child(summon)
+		summon.global_position = global_position + offset
+		summon.max_health = 48
+		summon.damage = 14
+		summon.speed = 108.0
+		summon.follow_range = 880.0
+		summon.attack_range = 46.0
+		summon.gravity = gravity
+		summon.modulate = Color(1, 0.42, 0.34, 1)
 
 func _respawn_after_delay():
 	set_physics_process(false)
@@ -253,9 +301,12 @@ func _respawn_after_delay():
 	velocity = Vector2.ZERO
 	knockback_velocity = Vector2.ZERO
 	knockback_time_left = 0.0
+	boss_telegraph_time_left = 0.0
+	boss_pending_leap_direction = 0.0
 	boss_leap_time_left = 0.0
 	boss_leap_ready = true
 	boss_phase_two_active = false
+	boss_phase_two_summoned = false
 	speed = base_speed
 	damage = base_damage
 	boss_leap_cooldown = base_boss_leap_cooldown

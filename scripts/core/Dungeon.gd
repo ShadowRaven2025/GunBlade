@@ -38,6 +38,12 @@ func _ready():
 		exit_area.body_exited.connect(_on_exit_area_body_exited)
 	_update_hud()
 
+func register_enemy(enemy: Enemy):
+	if enemy == null or not is_instance_valid(enemy):
+		return
+	if not enemy.died.is_connected(_on_enemy_died):
+		enemy.died.connect(_on_enemy_died)
+
 func _apply_selected_character():
 	var config := Game.get_selected_character_config()
 	player.max_health = config.get("max_health", player.max_health)
@@ -163,8 +169,8 @@ func _use_exit():
 		get_tree().change_scene_to_file(Game.get_floor_scene_path())
 		return
 	if Game.is_boss_floor():
-		Game.complete_run()
-		get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+		Game.prepare_boss_rewards()
+		get_tree().change_scene_to_file(Game.BOSS_REWARD_SCENE)
 		return
 	Game.next_floor()
 	get_tree().change_scene_to_file(TEST_ROOM_SCENE)
