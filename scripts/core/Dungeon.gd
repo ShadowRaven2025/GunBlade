@@ -46,12 +46,21 @@ func register_enemy(enemy: Enemy):
 
 func _apply_selected_character():
 	var config := Game.get_selected_character_config()
+	var relic_modifiers := Game.get_player_relic_modifiers()
 	player.max_health = config.get("max_health", player.max_health)
+	player.max_health += relic_modifiers.get("bonus_health", 0)
 	player.current_health = player.max_health
 	player.speed = config.get("speed", player.speed)
+	player.speed += relic_modifiers.get("bonus_speed", 0.0)
 	player.jump_velocity = config.get("jump_velocity", player.jump_velocity)
+	player.jump_velocity += relic_modifiers.get("bonus_jump", 0.0)
 	player.attack_damage = config.get("attack_damage", player.attack_damage)
+	player.attack_damage += relic_modifiers.get("bonus_damage", 0)
 	player.attack_range = config.get("attack_range", player.attack_range)
+	player.attack_range += relic_modifiers.get("bonus_attack_range", 0.0)
+	player.kick_knockback_force = 340.0 + relic_modifiers.get("bonus_kick_force", 0.0)
+	player.attack_cooldown = 0.42 * relic_modifiers.get("attack_cooldown_multiplier", 1.0)
+	player.kick_cooldown = 0.52 * relic_modifiers.get("kick_cooldown_multiplier", 1.0)
 	player.set_character_visuals(
 		config.get("idle", ""),
 		config.get("run", ""),
@@ -125,6 +134,9 @@ func _update_hud():
 	else:
 		state_label.text = "Depth secured"
 		room_status_label.text = _get_room_clear_text()
+
+	if not is_test_room and not Game.get_relic_ids().is_empty():
+		state_label.text = Game.get_relic_summary_text()
 
 func _get_hint_text(is_test_room: bool, is_boss_room: bool, enemies_left: int) -> String:
 	if enemies_left <= 0 and player_in_exit_area:

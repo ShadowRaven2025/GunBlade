@@ -13,27 +13,27 @@ const BOSS_RELICS := [
 	{
 		"id": "ember_crown",
 		"title": "Ember Crown",
-		"description": "+35 gold and a hotter finish to the run"
+		"description": "+35 gold and stronger primary attacks"
 	},
 	{
 		"id": "iron_oath",
 		"title": "Iron Oath",
-		"description": "Marks the run with a warden-slayer relic"
+		"description": "+20 max health and heavier kicks"
 	},
 	{
 		"id": "moon_seal",
 		"title": "Moon Seal",
-		"description": "Locks in a crypt relic for the run record"
+		"description": "Faster cooldowns and sharper jumps"
 	},
 	{
 		"id": "rampart_spur",
 		"title": "Rampart Spur",
-		"description": "+20 gold and a relic from the outer wall"
+		"description": "+20 gold and faster movement"
 	},
 	{
 		"id": "forgeblood_token",
 		"title": "Forgeblood Token",
-		"description": "+25 gold from the foundry stores"
+		"description": "+25 gold and a wider melee sweep"
 	}
 ]
 
@@ -192,6 +192,54 @@ func claim_boss_reward(relic_id: String):
 		break
 	current_run_data["pending_boss_rewards"] = []
 	save_game()
+
+func get_relic_ids() -> Array[String]:
+	var relic_ids: Array[String] = []
+	for relic in current_run_data.get("relics", []):
+		var relic_id := str(relic.get("id", ""))
+		if relic_id != "":
+			relic_ids.append(relic_id)
+	return relic_ids
+
+func get_player_relic_modifiers() -> Dictionary:
+	var modifiers := {
+		"bonus_health": 0,
+		"bonus_damage": 0,
+		"bonus_speed": 0.0,
+		"bonus_jump": 0.0,
+		"bonus_attack_range": 0.0,
+		"bonus_kick_force": 0.0,
+		"attack_cooldown_multiplier": 1.0,
+		"kick_cooldown_multiplier": 1.0,
+		"summary": []
+	}
+	for relic_id in get_relic_ids():
+		match relic_id:
+			"ember_crown":
+				modifiers["bonus_damage"] += 5
+				modifiers["summary"].append("Ember Crown: +5 attack")
+			"iron_oath":
+				modifiers["bonus_health"] += 20
+				modifiers["bonus_kick_force"] += 120.0
+				modifiers["summary"].append("Iron Oath: +20 HP, stronger kick")
+			"moon_seal":
+				modifiers["bonus_jump"] += -28.0
+				modifiers["attack_cooldown_multiplier"] *= 0.9
+				modifiers["kick_cooldown_multiplier"] *= 0.9
+				modifiers["summary"].append("Moon Seal: faster cooldowns")
+			"rampart_spur":
+				modifiers["bonus_speed"] += 24.0
+				modifiers["summary"].append("Rampart Spur: +24 speed")
+			"forgeblood_token":
+				modifiers["bonus_attack_range"] += 14.0
+				modifiers["summary"].append("Forgeblood Token: wider melee")
+	return modifiers
+
+func get_relic_summary_text() -> String:
+	var summary: Array = get_player_relic_modifiers().get("summary", [])
+	if summary.is_empty():
+		return "No relic blessings yet"
+	return " | ".join(summary)
 
 func lose_gold():
 	var lost = gold
