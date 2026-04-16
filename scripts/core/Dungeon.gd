@@ -2,6 +2,18 @@ extends Node2D
 
 const MAIN_MENU_SCENE := "res://scenes/menus/MainMenu.tscn"
 const TEST_ROOM_SCENE := "res://scenes/game/levels/TestRoom.tscn"
+const ROOM_ALERT_TEXT := {
+	"res://scenes/game/levels/Dungeon.tscn": "Sweep the broken ascent",
+	"res://scenes/game/levels/IronFoundry.tscn": "Cut through the foundry watch",
+	"res://scenes/game/levels/MoonCrypt.tscn": "Silence the crypt sentries",
+	"res://scenes/game/levels/BrokenRampart.tscn": "Retake the shattered rampart"
+}
+const ROOM_CLEAR_TEXT := {
+	"res://scenes/game/levels/Dungeon.tscn": "Claim the next floor at the orange gate",
+	"res://scenes/game/levels/IronFoundry.tscn": "The forge is yours. Reach the orange gate",
+	"res://scenes/game/levels/MoonCrypt.tscn": "The crypt is clear. Reach the orange gate",
+	"res://scenes/game/levels/BrokenRampart.tscn": "The wall is reclaimed. Reach the orange gate"
+}
 
 @onready var player: Player = $Player
 @onready var room_status_label: Label = $CanvasLayer/HUD/VBox/TopRow/RoomStatus
@@ -96,10 +108,10 @@ func _update_hud():
 	
 	if enemies_left > 0:
 		state_label.text = "Combat room engaged"
-		room_status_label.text = "Sweep the broken ascent: %s hostiles remain" % enemies_left
+		room_status_label.text = "%s: %s hostiles remain" % [_get_room_alert_text(), enemies_left]
 	else:
 		state_label.text = "Depth secured"
-		room_status_label.text = "Press E at the orange gate to claim the next floor"
+		room_status_label.text = _get_room_clear_text()
 
 func _get_hint_text(is_test_room: bool, is_boss_room: bool, enemies_left: int) -> String:
 	if enemies_left <= 0 and player_in_exit_area:
@@ -111,6 +123,13 @@ func _get_hint_text(is_test_room: bool, is_boss_room: bool, enemies_left: int) -
 	if enemies_left > 0:
 		return "A D move  |  Space jump  |  LMB attack  |  RMB kick"
 	return "Room clear: reach the orange gate and press E"
+
+func _get_room_alert_text() -> String:
+	return ROOM_ALERT_TEXT.get(scene_file_path, "Sweep the cells")
+
+func _get_room_clear_text() -> String:
+	var clear_text := ROOM_CLEAR_TEXT.get(scene_file_path, "Press E at the orange gate to claim the next floor")
+	return "%s" % clear_text
 
 func _can_use_exit() -> bool:
 	return _get_alive_enemy_count() == 0

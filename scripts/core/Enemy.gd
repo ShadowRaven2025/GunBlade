@@ -106,7 +106,6 @@ func _physics_process_dummy(delta):
 		_apply_knockback_motion(delta)
 	else:
 		velocity.x = 0.0
-	velocity.x = 0.0
 	move_and_slide()
 	_set_animation("idle")
 	_advance_animation(delta)

@@ -1,0 +1,89 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/game/levels/Dungeon.tscn" id="1_base"]
+
+[node name="WardenThrone" instance=ExtResource("1_base")]
+
+[node name="Backdrop" parent="." index="0"]
+color = Color(0.04, 0.01, 0.02, 1)
+
+[node name="SmokeGlow" parent="." index="1"]
+color = Color(0.46, 0.06, 0.12, 0.18)
+
+[node name="HeatBand" parent="." index="2"]
+color = Color(0.34, 0.04, 0.08, 0.16)
+
+[node name="BackgroundCastle" parent="." index="3"]
+modulate = Color(0.42, 0.24, 0.28, 0.2)
+
+[node name="BannerLeft" parent="." index="14"]
+modulate = Color(1, 0.28, 0.22, 1)
+
+[node name="BannerRight" parent="." index="15"]
+modulate = Color(1, 0.28, 0.22, 1)
+
+[node name="FireLeft" parent="." index="16"]
+modulate = Color(1, 0.32, 0.16, 0.92)
+
+[node name="FireCenter" parent="." index="17"]
+modulate = Color(1, 0.18, 0.12, 0.9)
+
+[node name="FireRight" parent="." index="18"]
+modulate = Color(1, 0.32, 0.16, 0.92)
+
+[node name="FloorCore" parent="." index="19"]
+color = Color(0.18, 0.08, 0.1, 1)
+
+[node name="FloorLavaGlow" parent="." index="20"]
+color = Color(0.92, 0.1, 0.14, 0.92)
+
+[node name="FloorLip" parent="." index="21"]
+color = Color(1, 0.42, 0.18, 0.96)
+
+[node name="Enemy" parent="." index="33"]
+position = Vector2(652, 402)
+scale = Vector2(1.75, 1.75)
+max_health = 220
+damage = 22
+speed = 82.0
+follow_range = 920.0
+attack_range = 68.0
+gravity = 1040.0
+modulate = Color(1, 0.6, 0.58, 1)
+
+[node name="Enemy2" parent="." index="34"]
+position = Vector2(372, 480)
+max_health = 60
+damage = 16
+speed = 98.0
+follow_range = 820.0
+modulate = Color(0.96, 0.44, 0.4, 1)
+
+[node name="Enemy3" parent="." index="35"]
+position = Vector2(944, 300)
+max_health = 60
+damage = 16
+speed = 98.0
+follow_range = 820.0
+modulate = Color(0.96, 0.44, 0.4, 1)
+
+[node name="ExitGlow" parent="." index="36"]
+color = Color(0.96, 0.14, 0.18, 0.34)
+
+[node name="ExitFrame" parent="." index="37"]
+color = Color(0.36, 0.06, 0.08, 0.82)
+
+[node name="ExitLintel" parent="." index="38"]
+color = Color(1, 0.26, 0.16, 0.96)
+
+[node name="RunLabel" parent="CanvasLayer/HUD/VBox/TopRow" index="0"]
+text = "Warden's Throne"
+
+[node name="RoomStatus" parent="CanvasLayer/HUD/VBox/TopRow" index="1"]
+text = "Break the warden before he corners you"
+
+[node name="StateLabel" parent="CanvasLayer/HUD/VBox/StatePanel" index="0"]
+text = "The prison warden waits at the center dais."
+
+[node name="Hint" parent="CanvasLayer/HUD/VBox" index="3"]
+text = "LMB attack  |  RMB kick for knockback  |  Space jump"

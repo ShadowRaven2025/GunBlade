@@ -117,7 +117,7 @@ func _animate(delta):
 			current_frame = (current_frame + 1) % current_frame_count
 	
 	if is_attacking:
-		_set_animation("attack", attack_texture, attack_frame_count)
+		_set_animation("attack", attack_texture, _get_attack_frame_count())
 	elif not is_on_floor():
 		_set_animation("jump", run_texture, jump_frame_count)
 	elif is_moving:

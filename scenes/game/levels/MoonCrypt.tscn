@@ -1,0 +1,89 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/game/levels/Dungeon.tscn" id="1_base"]
+
+[node name="MoonCrypt" instance=ExtResource("1_base")]
+
+[node name="Backdrop" parent="." index="0"]
+color = Color(0.03, 0.04, 0.08, 1)
+
+[node name="SmokeGlow" parent="." index="1"]
+color = Color(0.18, 0.22, 0.38, 0.16)
+
+[node name="HeatBand" parent="." index="2"]
+color = Color(0.08, 0.14, 0.26, 0.12)
+
+[node name="BackgroundCastle" parent="." index="3"]
+modulate = Color(0.28, 0.34, 0.46, 0.18)
+
+[node name="BackgroundTowerLeft" parent="." index="4"]
+modulate = Color(0.32, 0.38, 0.52, 0.2)
+
+[node name="BackgroundTowerRight" parent="." index="5"]
+modulate = Color(0.32, 0.38, 0.52, 0.2)
+
+[node name="BannerLeft" parent="." index="14"]
+modulate = Color(0.64, 0.76, 1, 1)
+
+[node name="BannerRight" parent="." index="15"]
+modulate = Color(0.64, 0.76, 1, 1)
+
+[node name="FireLeft" parent="." index="16"]
+modulate = Color(0.58, 0.72, 1, 0.72)
+
+[node name="FireCenter" parent="." index="17"]
+modulate = Color(0.72, 0.82, 1, 0.76)
+
+[node name="FireRight" parent="." index="18"]
+modulate = Color(0.58, 0.72, 1, 0.72)
+
+[node name="FloorCore" parent="." index="19"]
+color = Color(0.12, 0.14, 0.22, 1)
+
+[node name="FloorLavaGlow" parent="." index="20"]
+color = Color(0.38, 0.48, 0.9, 0.8)
+
+[node name="FloorLip" parent="." index="21"]
+color = Color(0.72, 0.82, 1, 0.9)
+
+[node name="Enemy" parent="." index="33"]
+position = Vector2(362, 480)
+max_health = 42
+damage = 14
+speed = 90.0
+modulate = Color(0.72, 0.8, 1, 1)
+
+[node name="Enemy2" parent="." index="34"]
+position = Vector2(700, 402)
+max_health = 32
+damage = 12
+speed = 100.0
+modulate = Color(0.78, 0.86, 1, 1)
+
+[node name="Enemy3" parent="." index="35"]
+position = Vector2(932, 300)
+max_health = 48
+damage = 16
+speed = 84.0
+modulate = Color(0.6, 0.72, 0.96, 1)
+
+[node name="ExitGlow" parent="." index="36"]
+color = Color(0.54, 0.66, 1, 0.32)
+
+[node name="ExitFrame" parent="." index="37"]
+color = Color(0.16, 0.2, 0.38, 0.76)
+
+[node name="ExitLintel" parent="." index="38"]
+color = Color(0.8, 0.88, 1, 0.92)
+
+[node name="RunLabel" parent="CanvasLayer/HUD/VBox/TopRow" index="0"]
+text = "Moon Crypt"
+
+[node name="RoomStatus" parent="CanvasLayer/HUD/VBox/TopRow" index="1"]
+text = "Silence the crypt sentries"
+
+[node name="StateLabel" parent="CanvasLayer/HUD/VBox/StatePanel" index="0"]
+text = "Cold light spills across the catacomb walkways."
+
+[node name="Hint" parent="CanvasLayer/HUD/VBox" index="3"]
+text = "A D move  |  Space jump  |  LMB attack  |  RMB kick"

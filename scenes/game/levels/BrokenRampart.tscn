@@ -1,0 +1,77 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/game/levels/Dungeon.tscn" id="1_base"]
+
+[node name="BrokenRampart" instance=ExtResource("1_base")]
+
+[node name="Backdrop" parent="." index="0"]
+color = Color(0.03, 0.05, 0.04, 1)
+
+[node name="SmokeGlow" parent="." index="1"]
+color = Color(0.18, 0.26, 0.16, 0.12)
+
+[node name="HeatBand" parent="." index="2"]
+color = Color(0.1, 0.18, 0.12, 0.12)
+
+[node name="BackgroundCastle" parent="." index="3"]
+modulate = Color(0.3, 0.38, 0.34, 0.18)
+
+[node name="BrokenHeader" parent="." index="11"]
+color = Color(0.24, 0.22, 0.12, 0.8)
+
+[node name="BannerLeft" parent="." index="14"]
+modulate = Color(0.72, 0.88, 0.54, 1)
+
+[node name="BannerRight" parent="." index="15"]
+modulate = Color(0.72, 0.88, 0.54, 1)
+
+[node name="FloorCore" parent="." index="19"]
+color = Color(0.14, 0.18, 0.16, 1)
+
+[node name="FloorLavaGlow" parent="." index="20"]
+color = Color(0.44, 0.58, 0.22, 0.82)
+
+[node name="FloorLip" parent="." index="21"]
+color = Color(0.78, 0.9, 0.38, 0.9)
+
+[node name="Enemy" parent="." index="33"]
+position = Vector2(402, 480)
+max_health = 44
+damage = 15
+speed = 96.0
+follow_range = 620.0
+
+[node name="Enemy2" parent="." index="34"]
+position = Vector2(742, 402)
+max_health = 38
+damage = 13
+speed = 104.0
+follow_range = 620.0
+
+[node name="Enemy3" parent="." index="35"]
+position = Vector2(968, 300)
+max_health = 52
+damage = 17
+speed = 90.0
+follow_range = 620.0
+
+[node name="ExitGlow" parent="." index="36"]
+color = Color(0.74, 0.84, 0.34, 0.28)
+
+[node name="ExitFrame" parent="." index="37"]
+color = Color(0.2, 0.24, 0.14, 0.78)
+
+[node name="ExitLintel" parent="." index="38"]
+color = Color(0.88, 0.94, 0.46, 0.92)
+
+[node name="RunLabel" parent="CanvasLayer/HUD/VBox/TopRow" index="0"]
+text = "Broken Rampart"
+
+[node name="RoomStatus" parent="CanvasLayer/HUD/VBox/TopRow" index="1"]
+text = "Retake the shattered rampart"
+
+[node name="StateLabel" parent="CanvasLayer/HUD/VBox/StatePanel" index="0"]
+text = "The wind tears across the ruined wall."
+
+[node name="Hint" parent="CanvasLayer/HUD/VBox" index="3"]
+text = "A D move  |  Space jump  |  LMB attack  |  RMB kick"

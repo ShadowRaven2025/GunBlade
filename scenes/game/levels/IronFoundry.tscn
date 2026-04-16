@@ -1,0 +1,80 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/game/levels/Dungeon.tscn" id="1_base"]
+
+[node name="IronFoundry" instance=ExtResource("1_base")]
+
+[node name="Backdrop" parent="." index="0"]
+color = Color(0.05, 0.03, 0.02, 1)
+
+[node name="SmokeGlow" parent="." index="1"]
+color = Color(0.42, 0.16, 0.06, 0.18)
+
+[node name="HeatBand" parent="." index="2"]
+color = Color(0.46, 0.18, 0.08, 0.16)
+
+[node name="BrokenHeader" parent="." index="11"]
+color = Color(0.32, 0.16, 0.08, 0.84)
+
+[node name="WallLeftDecor" parent="." index="12"]
+color = Color(0.2, 0.12, 0.08, 0.86)
+
+[node name="WallRightDecor" parent="." index="13"]
+color = Color(0.2, 0.12, 0.08, 0.86)
+
+[node name="BannerLeft" parent="." index="14"]
+modulate = Color(0.96, 0.62, 0.2, 1)
+
+[node name="BannerRight" parent="." index="15"]
+modulate = Color(0.96, 0.62, 0.2, 1)
+
+[node name="FireCenter" parent="." index="17"]
+modulate = Color(1, 0.42, 0.08, 0.86)
+
+[node name="FloorCore" parent="." index="19"]
+color = Color(0.2, 0.14, 0.1, 1)
+
+[node name="FloorLavaGlow" parent="." index="20"]
+color = Color(0.94, 0.38, 0.1, 0.96)
+
+[node name="FloorLip" parent="." index="21"]
+color = Color(1, 0.68, 0.2, 0.98)
+
+[node name="Enemy" parent="." index="33"]
+position = Vector2(278, 480)
+max_health = 38
+damage = 13
+speed = 92.0
+
+[node name="Enemy2" parent="." index="34"]
+position = Vector2(640, 402)
+max_health = 34
+damage = 12
+speed = 98.0
+
+[node name="Enemy3" parent="." index="35"]
+position = Vector2(916, 300)
+max_health = 44
+damage = 15
+speed = 88.0
+
+[node name="ExitGlow" parent="." index="36"]
+color = Color(0.92, 0.5, 0.14, 0.36)
+
+[node name="ExitFrame" parent="." index="37"]
+color = Color(0.38, 0.2, 0.08, 0.8)
+
+[node name="ExitLintel" parent="." index="38"]
+color = Color(0.98, 0.72, 0.28, 0.94)
+
+[node name="RunLabel" parent="CanvasLayer/HUD/VBox/TopRow" index="0"]
+text = "Iron Foundry"
+
+[node name="RoomStatus" parent="CanvasLayer/HUD/VBox/TopRow" index="1"]
+text = "Cut through the foundry watch"
+
+[node name="StateLabel" parent="CanvasLayer/HUD/VBox/StatePanel" index="0"]
+text = "The forge guard is already moving toward you."
+
+[node name="Hint" parent="CanvasLayer/HUD/VBox" index="3"]
+text = "A D move  |  Space jump  |  LMB attack  |  RMB kick"
