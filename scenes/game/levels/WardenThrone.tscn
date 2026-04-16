@@ -49,6 +49,14 @@ speed = 82.0
 follow_range = 920.0
 attack_range = 68.0
 gravity = 1040.0
+is_boss = true
+boss_phase_two_threshold = 0.5
+boss_phase_two_speed_bonus = 58.0
+boss_phase_two_damage_bonus = 10
+boss_leap_speed = 380.0
+boss_leap_vertical = -360.0
+boss_leap_cooldown = 2.4
+boss_leap_duration = 0.58
 modulate = Color(1, 0.6, 0.58, 1)
 
 [node name="Enemy2" parent="." index="34"]

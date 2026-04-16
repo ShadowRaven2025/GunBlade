@@ -19,11 +19,13 @@ const ROOM_CLEAR_TEXT := {
 @onready var room_status_label: Label = $CanvasLayer/HUD/VBox/TopRow/RoomStatus
 @onready var floor_value_label: Label = $CanvasLayer/HUD/VBox/StatsRow/FloorValue
 @onready var enemies_value_label: Label = $CanvasLayer/HUD/VBox/StatsRow/EnemiesValue
+@onready var gold_value_label: Label = $CanvasLayer/HUD/VBox/StatsRow/GoldValue
 @onready var state_label: Label = $CanvasLayer/HUD/VBox/StatePanel/StateLabel
 @onready var hint_label: Label = $CanvasLayer/HUD/VBox/Hint
 @onready var exit_area: Area2D = get_node_or_null("ExitArea")
 
 var player_in_exit_area: bool = false
+var room_reward_granted: bool = false
 
 func _ready():
 	_apply_selected_character()
@@ -58,6 +60,8 @@ func _apply_selected_character():
 	player._update_health_bar()
 
 func _on_enemy_died():
+	Game.record_enemy_kill()
+	_grant_room_reward_if_ready()
 	_update_hud()
 
 func _on_player_died():
@@ -81,6 +85,7 @@ func _update_hud():
 	var is_boss_room := not is_test_room and Game.is_boss_floor()
 	floor_value_label.text = "T%s" % Game.current_floor if is_test_room else "%02d" % Game.current_floor
 	enemies_value_label.text = str(enemies_left)
+	gold_value_label.text = str(Game.gold)
 	hint_label.text = _get_hint_text(is_test_room, is_boss_room, enemies_left)
 	if player == null or not is_instance_valid(player):
 		state_label.text = "Run failed"
@@ -97,13 +102,15 @@ func _update_hud():
 			room_status_label.text = "Press E at the blue gate to descend"
 		return
 
+	_grant_room_reward_if_ready()
+
 	if is_boss_room:
 		if enemies_left > 0:
 			state_label.text = "Boss encounter"
 			room_status_label.text = "Break the warden before he corners you"
 		else:
 			state_label.text = "Warden fallen"
-			room_status_label.text = "Press E at the crimson gate to finish the run"
+			room_status_label.text = "Boss reward claimed. Press E at the crimson gate to finish the run"
 		return
 	
 	if enemies_left > 0:
@@ -130,6 +137,23 @@ func _get_room_alert_text() -> String:
 func _get_room_clear_text() -> String:
 	var clear_text := ROOM_CLEAR_TEXT.get(scene_file_path, "Press E at the orange gate to claim the next floor")
 	return "%s" % clear_text
+
+func _grant_room_reward_if_ready():
+	if room_reward_granted:
+		return
+	if scene_file_path == TEST_ROOM_SCENE:
+		return
+	if _get_alive_enemy_count() > 0:
+		return
+	var reward := _get_room_reward_amount()
+	Game.add_gold(reward)
+	Game.record_room_clear()
+	room_reward_granted = true
+
+func _get_room_reward_amount() -> int:
+	if Game.is_boss_floor():
+		return 90
+	return 12 + Game.current_floor * 8
 
 func _can_use_exit() -> bool:
 	return _get_alive_enemy_count() == 0

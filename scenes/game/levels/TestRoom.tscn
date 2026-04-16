@@ -448,7 +448,7 @@ horizontal_alignment = 2
 
 [node name="StatsRow" type="GridContainer" parent="CanvasLayer/HUD/VBox"]
 layout_mode = 2
-columns = 4
+columns = 6
 
 [node name="FloorLabel" type="Label" parent="CanvasLayer/HUD/VBox/StatsRow"]
 layout_mode = 2
@@ -465,6 +465,14 @@ text = "Threats"
 [node name="EnemiesValue" type="Label" parent="CanvasLayer/HUD/VBox/StatsRow"]
 layout_mode = 2
 text = "1"
+
+[node name="GoldLabel" type="Label" parent="CanvasLayer/HUD/VBox/StatsRow"]
+layout_mode = 2
+text = "Gold"
+
+[node name="GoldValue" type="Label" parent="CanvasLayer/HUD/VBox/StatsRow"]
+layout_mode = 2
+text = "0"
 
 [node name="StatePanel" type="Panel" parent="CanvasLayer/HUD/VBox"]
 layout_mode = 2

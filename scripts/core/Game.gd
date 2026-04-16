@@ -82,6 +82,7 @@ func new_game():
 		"floor": 1,
 		"character": selected_character,
 		"gold": 0,
+		"rooms_cleared": 0,
 		"runes": [],
 		"curses": [],
 		"relics": [],
@@ -121,6 +122,14 @@ func complete_run():
 func add_gold(amount: int):
 	gold += amount
 	current_run_data["gold"] = gold
+	save_game()
+
+func record_enemy_kill(amount: int = 1):
+	current_run_data["enemies_killed"] = current_run_data.get("enemies_killed", 0) + amount
+	save_game()
+
+func record_room_clear():
+	current_run_data["rooms_cleared"] = current_run_data.get("rooms_cleared", 0) + 1
 	save_game()
 
 func lose_gold():
