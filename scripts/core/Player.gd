@@ -20,6 +20,8 @@ const ARROW_SCENE = preload("res://scenes/game/projectiles/Arrow.tscn")
 @export var kick_cooldown: float = 0.52
 @export var kick_hit_frame: int = 1
 @export var kick_knockback_force: float = 340.0
+@export var ranged_backstep_speed: float = 340.0
+@export var ranged_backstep_duration: float = 0.18
 
 var current_health: int
 var can_attack: bool = true
@@ -40,6 +42,10 @@ var attack_texture: Texture2D
 var attack_type: String = "melee"
 var attack_pose_frame: int = -1
 var current_attack_mode: String = "primary"
+var can_double_jump: bool = false
+var jumps_remaining: int = 1
+var backstep_time_left: float = 0.0
+var backstep_direction: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var health_bar: ProgressBar = $HealthBar
@@ -58,9 +64,10 @@ func _ready():
 		-1,
 		"melee"
 	)
+	_reset_jump_state()
 	_update_health_bar()
 
-func set_character_visuals(idle_path: String, run_path: String, attack_path: String, idle_frames: int = 8, run_frames: int = 6, attack_frames: int = 4, hit_frame: int = 2, pose_frame: int = -1, next_attack_type: String = "melee"):
+func set_character_visuals(idle_path: String, run_path: String, attack_path: String, idle_frames: int = 8, run_frames: int = 6, attack_frames: int = 4, hit_frame: int = 2, pose_frame: int = -1, next_attack_type: String = "melee", enable_double_jump: bool = false):
 	idle_texture = load(idle_path)
 	run_texture = load(run_path)
 	attack_texture = load(attack_path)
@@ -71,25 +78,39 @@ func set_character_visuals(idle_path: String, run_path: String, attack_path: Str
 	attack_hit_frame = hit_frame
 	attack_pose_frame = pose_frame
 	attack_type = next_attack_type
+	can_double_jump = enable_double_jump
 	sprite.texture = idle_texture
 	sprite.hframes = idle_frame_count
 	sprite.vframes = 1
 	sprite.frame = 0
 	current_frame_count = idle_frame_count
 	current_animation = "idle"
+	_reset_jump_state()
 
 func _physics_process(delta):
 	var input_axis = Input.get_axis("move_left", "move_right")
 	is_moving = absf(input_axis) > 0.01
 	if is_moving:
 		facing_direction = sign(input_axis)
+
+	if is_on_floor():
+		_reset_jump_state()
+	
+	if Input.is_action_just_pressed("jump") and not is_attacking:
+		if is_on_floor():
+			velocity.y = jump_velocity
+			jumps_remaining = max(jumps_remaining - 1, 0)
+		elif can_double_jump and jumps_remaining > 0:
+			velocity.y = jump_velocity
+			jumps_remaining -= 1
 	
 	if not is_on_floor():
 		velocity.y += gravity * delta
-	elif Input.is_action_just_pressed("jump") and not is_attacking:
-		velocity.y = jump_velocity
 	
-	if is_attacking:
+	if backstep_time_left > 0.0:
+		backstep_time_left = max(backstep_time_left - delta, 0.0)
+		velocity.x = backstep_direction * ranged_backstep_speed
+	elif is_attacking:
 		velocity.x = move_toward(velocity.x, 0.0, speed * 0.15)
 	else:
 		velocity.x = input_axis * speed
@@ -182,6 +203,9 @@ func _get_attack_frame_count() -> int:
 
 func _perform_attack_hit():
 	if current_attack_mode == "kick":
+		if attack_type == "ranged":
+			_perform_ranged_backstep()
+			return
 		_kick_enemies_in_attack()
 		return
 	if attack_type == "ranged":
@@ -222,10 +246,22 @@ func _kick_enemies_in_attack():
 func _fire_arrow():
 	var arrow = ARROW_SCENE.instantiate()
 	get_parent().add_child(arrow)
-	var spawn_offset := Vector2(18.0 * facing_direction, -30.0)
-	var launch_velocity := Vector2(430.0 * facing_direction, -210.0)
+	var spawn_offset: Vector2 = Vector2(20.0 * facing_direction, -28.0)
+	var launch_velocity: Vector2 = Vector2(720.0 * facing_direction, 0.0)
 	arrow.global_position = sprite.global_position + spawn_offset
-	arrow.setup(facing_direction, attack_damage, launch_velocity)
+	arrow.setup(facing_direction, attack_damage, launch_velocity, true)
+
+func _perform_ranged_backstep():
+	backstep_direction = -facing_direction
+	if backstep_direction == 0.0:
+		backstep_direction = -1.0
+	backstep_time_left = ranged_backstep_duration
+	velocity.x = backstep_direction * ranged_backstep_speed
+	velocity.y = 0.0
+	_fire_arrow()
+
+func _reset_jump_state():
+	jumps_remaining = 2 if can_double_jump else 1
 
 func _update_health_bar():
 	health_bar.max_value = max_health
