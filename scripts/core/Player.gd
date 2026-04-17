@@ -132,13 +132,15 @@ func _animate(delta):
 		if is_attacking:
 			if current_attack_mode == "primary" and attack_type == "ranged" and attack_pose_frame >= 0:
 				current_frame = mini(attack_pose_frame, current_frame_count - 1)
+			elif current_attack_mode == "kick" and attack_type == "ranged" and attack_pose_frame >= 0:
+				current_frame = mini(attack_pose_frame, current_frame_count - 1)
 			else:
 				current_frame = min(current_frame + 1, current_frame_count - 1)
 		else:
 			current_frame = (current_frame + 1) % current_frame_count
 	
 	if is_attacking:
-		_set_animation("attack", attack_texture, _get_attack_frame_count())
+		_set_animation("attack", attack_texture, _get_attack_texture_frame_count())
 	elif not is_on_floor():
 		_set_animation("jump", run_texture, jump_frame_count)
 	elif is_moving:
@@ -173,11 +175,11 @@ func attack(mode: String = "primary"):
 	anim_timer = 0.0
 	current_frame = 0
 	var animation_frames := _get_attack_frame_count()
-	_set_animation("attack", attack_texture, animation_frames)
+	_set_animation("attack", attack_texture, _get_attack_texture_frame_count())
 	sprite.frame = 0
 	
 	var hit_frame := attack_hit_frame if current_attack_mode == "primary" else kick_hit_frame
-	var hit_delay = attack_anim_speed * clampi(hit_frame, 0, current_frame_count - 1)
+	var hit_delay = attack_anim_speed * clampi(hit_frame, 0, animation_frames - 1)
 	if hit_delay > 0.0:
 		await get_tree().create_timer(hit_delay).timeout
 	
@@ -200,6 +202,11 @@ func _get_attack_frame_count() -> int:
 	if current_attack_mode == "kick":
 		return mini(4, attack_frame_count)
 	return attack_frame_count
+
+func _get_attack_texture_frame_count() -> int:
+	if current_attack_mode == "kick" and attack_type == "ranged":
+		return attack_frame_count
+	return _get_attack_frame_count()
 
 func _perform_attack_hit():
 	if current_attack_mode == "kick":
@@ -243,13 +250,17 @@ func _kick_enemies_in_attack():
 			enemy.take_damage(kick_damage)
 			enemy.apply_knockback(Vector2(kick_knockback_force * facing_direction, -120.0))
 
-func _fire_arrow():
+func _fire_arrow(flat_flight: bool = false):
 	var arrow = ARROW_SCENE.instantiate()
 	get_parent().add_child(arrow)
 	var spawn_offset: Vector2 = Vector2(20.0 * facing_direction, -28.0)
+	if flat_flight:
+		spawn_offset.y = -14.0
 	var launch_velocity: Vector2 = Vector2(720.0 * facing_direction, 0.0)
+	if not flat_flight:
+		launch_velocity.y = -110.0
 	arrow.global_position = sprite.global_position + spawn_offset
-	arrow.setup(facing_direction, attack_damage, launch_velocity, true)
+	arrow.setup(facing_direction, attack_damage, launch_velocity, flat_flight)
 
 func _perform_ranged_backstep():
 	backstep_direction = -facing_direction
@@ -258,7 +269,7 @@ func _perform_ranged_backstep():
 	backstep_time_left = ranged_backstep_duration
 	velocity.x = backstep_direction * ranged_backstep_speed
 	velocity.y = 0.0
-	_fire_arrow()
+	_fire_arrow(true)
 
 func _reset_jump_state():
 	jumps_remaining = 2 if can_double_jump else 1

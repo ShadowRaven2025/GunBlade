@@ -277,7 +277,7 @@ func _try_activate_boss_phase_two():
 func _summon_phase_two_reinforcements():
 	if get_parent() == null:
 		return
-	var summon_offsets := [Vector2(-170, -24), Vector2(170, -24)]
+	var summon_offsets: Array[Vector2] = [Vector2(-170, -24), Vector2(170, -24)]
 	for offset in summon_offsets:
 		var summon = ENEMY_SCENE.instantiate() as Enemy
 		get_parent().add_child(summon)

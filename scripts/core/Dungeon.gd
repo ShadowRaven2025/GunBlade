@@ -70,7 +70,8 @@ func _apply_selected_character():
 		config.get("attack_frames", 4),
 		config.get("attack_hit_frame", 2),
 		config.get("attack_pose_frame", -1),
-		config.get("attack_type", "melee")
+		config.get("attack_type", "melee"),
+		bool(config.get("double_jump", false))
 	)
 	player._update_health_bar()
 
@@ -153,7 +154,7 @@ func _get_room_alert_text() -> String:
 	return ROOM_ALERT_TEXT.get(scene_file_path, "Sweep the cells")
 
 func _get_room_clear_text() -> String:
-	var clear_text := ROOM_CLEAR_TEXT.get(scene_file_path, "Press E at the orange gate to claim the next floor")
+	var clear_text: String = str(ROOM_CLEAR_TEXT.get(scene_file_path, "Press E at the orange gate to claim the next floor"))
 	return "%s" % clear_text
 
 func _grant_room_reward_if_ready():

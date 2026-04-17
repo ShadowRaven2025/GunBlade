@@ -1,13 +1,11 @@
 extends Node
 
-const MAX_FLOOR := 5
+const MAX_FLOOR := 3
 const BOSS_REWARD_SCENE := "res://scenes/menus/BossReward.tscn"
 const FLOOR_SCENES := {
 	1: "res://scenes/game/levels/Dungeon.tscn",
 	2: "res://scenes/game/levels/IronFoundry.tscn",
-	3: "res://scenes/game/levels/MoonCrypt.tscn",
-	4: "res://scenes/game/levels/BrokenRampart.tscn",
-	5: "res://scenes/game/levels/WardenThrone.tscn"
+	3: "res://scenes/game/levels/WardenThrone.tscn"
 }
 const BOSS_RELICS := [
 	{
@@ -74,8 +72,9 @@ const CHARACTER_CONFIGS := {
 		"max_health": 90,
 		"speed": 295.0,
 		"jump_velocity": -480.0,
-		"attack_damage": 11,
-		"attack_range": 62.0
+		"attack_damage": 18,
+		"attack_range": 72.0,
+		"double_jump": true
 	},
 	"monk": {
 		"label": "Monk",
@@ -128,19 +127,19 @@ func set_selected_character(character_id: String):
 		save_game()
 
 func get_selected_character_config() -> Dictionary:
-	return CHARACTER_CONFIGS.get(selected_character, CHARACTER_CONFIGS["warrior"])
+	return CHARACTER_CONFIGS.get(selected_character, CHARACTER_CONFIGS["warrior"]) as Dictionary
 
 func next_floor():
 	current_floor = mini(current_floor + 1, MAX_FLOOR)
 	current_run_data["floor"] = current_floor
 	save_game()
 
-func get_floor_scene_path(floor: int = current_floor) -> String:
-	var normalized_floor := clampi(floor, 1, MAX_FLOOR)
-	return FLOOR_SCENES.get(normalized_floor, FLOOR_SCENES[1])
+func get_floor_scene_path(floor_number: int = current_floor) -> String:
+	var normalized_floor: int = clampi(floor_number, 1, MAX_FLOOR)
+	return str(FLOOR_SCENES.get(normalized_floor, FLOOR_SCENES[1]))
 
-func is_boss_floor(floor: int = current_floor) -> bool:
-	return floor >= MAX_FLOOR
+func is_boss_floor(floor_number: int = current_floor) -> bool:
+	return floor_number >= MAX_FLOOR
 
 func complete_run():
 	current_run_data["last_completed_floor"] = MAX_FLOOR
@@ -155,31 +154,32 @@ func add_gold(amount: int):
 	save_game()
 
 func record_enemy_kill(amount: int = 1):
-	current_run_data["enemies_killed"] = current_run_data.get("enemies_killed", 0) + amount
+	current_run_data["enemies_killed"] = int(current_run_data.get("enemies_killed", 0)) + amount
 	save_game()
 
 func record_room_clear():
-	current_run_data["rooms_cleared"] = current_run_data.get("rooms_cleared", 0) + 1
+	current_run_data["rooms_cleared"] = int(current_run_data.get("rooms_cleared", 0)) + 1
 	save_game()
 
 func prepare_boss_rewards():
 	var options: Array = []
-	var start_index := (current_run_data.get("rooms_cleared", 0) + gold + current_floor) % BOSS_RELICS.size()
+	var start_index: int = int(current_run_data.get("rooms_cleared", 0) + gold + current_floor) % BOSS_RELICS.size()
 	for i in range(3):
-		var relic := BOSS_RELICS[(start_index + i) % BOSS_RELICS.size()].duplicate(true)
+		var relic: Dictionary = BOSS_RELICS[(start_index + i) % BOSS_RELICS.size()].duplicate(true)
 		options.append(relic)
 	current_run_data["pending_boss_rewards"] = options
 	save_game()
 
 func get_pending_boss_rewards() -> Array:
-	return current_run_data.get("pending_boss_rewards", [])
+	return current_run_data.get("pending_boss_rewards", []) as Array
 
 func claim_boss_reward(relic_id: String):
 	var options: Array = get_pending_boss_rewards()
-	for relic in options:
+	for relic_variant in options:
+		var relic: Dictionary = relic_variant
 		if relic.get("id", "") != relic_id:
 			continue
-		var relics: Array = current_run_data.get("relics", [])
+		var relics: Array = current_run_data.get("relics", []) as Array
 		relics.append(relic)
 		current_run_data["relics"] = relics
 		current_run_data["last_boss_reward"] = relic
@@ -195,14 +195,15 @@ func claim_boss_reward(relic_id: String):
 
 func get_relic_ids() -> Array[String]:
 	var relic_ids: Array[String] = []
-	for relic in current_run_data.get("relics", []):
-		var relic_id := str(relic.get("id", ""))
+	for relic_variant in current_run_data.get("relics", []) as Array:
+		var relic: Dictionary = relic_variant
+		var relic_id: String = str(relic.get("id", ""))
 		if relic_id != "":
 			relic_ids.append(relic_id)
 	return relic_ids
 
 func get_player_relic_modifiers() -> Dictionary:
-	var modifiers := {
+	var modifiers: Dictionary = {
 		"bonus_health": 0,
 		"bonus_damage": 0,
 		"bonus_speed": 0.0,
@@ -236,7 +237,7 @@ func get_player_relic_modifiers() -> Dictionary:
 	return modifiers
 
 func get_relic_summary_text() -> String:
-	var summary: Array = get_player_relic_modifiers().get("summary", [])
+	var summary: Array = get_player_relic_modifiers().get("summary", []) as Array
 	if summary.is_empty():
 		return "No relic blessings yet"
 	return " | ".join(summary)
@@ -258,10 +259,10 @@ func load_game():
 	if FileAccess.file_exists("user://savegame.dat"):
 		var save_file = FileAccess.open("user://savegame.dat", FileAccess.READ)
 		var json_string = save_file.get_line()
-		current_run_data = JSON.parse_string(json_string)
-		current_floor = current_run_data.get("floor", 1)
-		gold = current_run_data.get("gold", 0)
-		selected_character = current_run_data.get("character", selected_character)
+		current_run_data = JSON.parse_string(json_string) as Dictionary
+		current_floor = int(current_run_data.get("floor", 1))
+		gold = int(current_run_data.get("gold", 0))
+		selected_character = str(current_run_data.get("character", selected_character))
 		save_file.close()
 
 func game_over():
