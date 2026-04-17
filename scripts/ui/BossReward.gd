@@ -22,15 +22,15 @@ func _ready():
 	subtitle_label.text = "The warden is down. Take one relic before ending the run."
 	hint_label.text = "Each relic is stored in the run record. Some also add bonus gold immediately."
 	for i in range(reward_buttons.size()):
-		var button: Button = reward_buttons[i]
+		var button = reward_buttons[i]
 		if i >= reward_options.size():
 			button.disabled = true
 			button.text = "Unavailable"
 			continue
-		var relic: Dictionary = reward_options[i]
-		var relic_title: String = str(relic.get("title", "Unknown Relic"))
-		var relic_description: String = str(relic.get("description", ""))
-		var relic_id: String = str(relic.get("id", ""))
+		var relic = reward_options[i]
+		var relic_title = str(relic.get("title", "Unknown Relic"))
+		var relic_description = str(relic.get("description", ""))
+		var relic_id = str(relic.get("id", ""))
 		button.text = "%s\n%s" % [relic_title, relic_description]
 		button.pressed.connect(_on_reward_selected.bind(relic_id))
 

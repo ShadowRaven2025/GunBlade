@@ -3,6 +3,7 @@ class_name Player extends CharacterBody2D
 signal died
 
 const ARROW_SCENE = preload("res://scenes/game/projectiles/Arrow.tscn")
+const MAGIC_BOLT_SCENE = preload("res://scenes/game/projectiles/MagicBolt.tscn")
 
 @export var speed: float = 260.0
 @export var jump_velocity: float = -420.0
@@ -22,6 +23,11 @@ const ARROW_SCENE = preload("res://scenes/game/projectiles/Arrow.tscn")
 @export var kick_knockback_force: float = 340.0
 @export var ranged_backstep_speed: float = 340.0
 @export var ranged_backstep_duration: float = 0.18
+@export var max_mana: float = 100.0
+@export var magic_shot_interval: float = 0.09
+@export var magic_mana_drain_per_second: float = 24.0
+@export var magic_mana_regen_per_second: float = 16.0
+@export var magic_bolt_damage: int = 7
 
 var current_health: int
 var can_attack: bool = true
@@ -46,9 +52,13 @@ var can_double_jump: bool = false
 var jumps_remaining: int = 1
 var backstep_time_left: float = 0.0
 var backstep_direction: float = 0.0
+var current_mana: float = 0.0
+var magic_shot_time_left: float = 0.0
+var is_channeling_magic: bool = false
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var health_bar: ProgressBar = $HealthBar
+@onready var mana_bar = get_node_or_null("ManaBar")
 
 func _ready():
 	add_to_group("player")
@@ -66,6 +76,8 @@ func _ready():
 	)
 	_reset_jump_state()
 	_update_health_bar()
+	current_mana = max_mana
+	_update_mana_bar()
 
 func set_character_visuals(idle_path: String, run_path: String, attack_path: String, idle_frames: int = 8, run_frames: int = 6, attack_frames: int = 4, hit_frame: int = 2, pose_frame: int = -1, next_attack_type: String = "melee", enable_double_jump: bool = false):
 	idle_texture = load(idle_path)
@@ -79,13 +91,17 @@ func set_character_visuals(idle_path: String, run_path: String, attack_path: Str
 	attack_pose_frame = pose_frame
 	attack_type = next_attack_type
 	can_double_jump = enable_double_jump
+	if attack_type != "magic":
+		is_channeling_magic = false
 	sprite.texture = idle_texture
 	sprite.hframes = idle_frame_count
 	sprite.vframes = 1
 	sprite.frame = 0
 	current_frame_count = idle_frame_count
 	current_animation = "idle"
+	current_mana = max_mana
 	_reset_jump_state()
+	_update_mana_bar()
 
 func _physics_process(delta):
 	var input_axis = Input.get_axis("move_left", "move_right")
@@ -107,10 +123,12 @@ func _physics_process(delta):
 	if not is_on_floor():
 		velocity.y += gravity * delta
 	
+	_update_magic_attack(delta)
+
 	if backstep_time_left > 0.0:
 		backstep_time_left = max(backstep_time_left - delta, 0.0)
 		velocity.x = backstep_direction * ranged_backstep_speed
-	elif is_attacking:
+	elif is_attacking or is_channeling_magic:
 		velocity.x = move_toward(velocity.x, 0.0, speed * 0.15)
 	else:
 		velocity.x = input_axis * speed
@@ -119,10 +137,38 @@ func _physics_process(delta):
 	move_and_slide()
 	_animate(delta)
 	
-	if Input.is_action_just_pressed("kick") and can_attack:
+	if Input.is_action_just_pressed("kick") and can_attack and not is_channeling_magic:
 		attack("kick")
-	elif Input.is_action_just_pressed("attack") and can_attack:
+	elif attack_type != "magic" and Input.is_action_just_pressed("attack") and can_attack:
 		attack("primary")
+
+func _update_magic_attack(delta):
+	if attack_type != "magic":
+		return
+	if is_attacking:
+		is_channeling_magic = false
+		magic_shot_time_left = 0.0
+		_regen_mana(delta)
+		_update_mana_bar()
+		return
+	var wants_magic = Input.is_action_pressed("attack") and current_mana > 0.0
+	if wants_magic:
+		is_channeling_magic = true
+		magic_shot_time_left = max(magic_shot_time_left - delta, 0.0)
+		current_mana = max(current_mana - magic_mana_drain_per_second * delta, 0.0)
+		if magic_shot_time_left == 0.0 and current_mana > 0.0:
+			_fire_magic_bolt()
+			magic_shot_time_left = magic_shot_interval
+	else:
+		is_channeling_magic = false
+		magic_shot_time_left = 0.0
+		_regen_mana(delta)
+	if current_mana <= 0.0:
+		is_channeling_magic = false
+	_update_mana_bar()
+
+func _regen_mana(delta):
+	current_mana = min(current_mana + magic_mana_regen_per_second * delta, max_mana)
 
 func _animate(delta):
 	anim_timer += delta
@@ -139,7 +185,7 @@ func _animate(delta):
 		else:
 			current_frame = (current_frame + 1) % current_frame_count
 	
-	if is_attacking:
+	if is_attacking or is_channeling_magic:
 		_set_animation("attack", attack_texture, _get_attack_texture_frame_count())
 	elif not is_on_floor():
 		_set_animation("jump", run_texture, jump_frame_count)
@@ -215,13 +261,14 @@ func _perform_attack_hit():
 			return
 		_kick_enemies_in_attack()
 		return
+	if attack_type == "magic":
+		return
 	if attack_type == "ranged":
 		_fire_arrow()
 		return
 	_damage_enemies_in_attack()
 
 func _damage_enemies_in_attack():
-	var attack_direction = Vector2.RIGHT * facing_direction
 	var attack_center = global_position + Vector2(attack_range * facing_direction, -10.0)
 	for node in get_parent().get_children():
 		if not (node is Enemy):
@@ -255,7 +302,7 @@ func _fire_arrow(flat_flight: bool = false):
 	get_parent().add_child(arrow)
 	var spawn_offset: Vector2 = Vector2(20.0 * facing_direction, -28.0)
 	if flat_flight:
-		spawn_offset.y = -14.0
+		spawn_offset.y = -6.0
 	var launch_velocity: Vector2 = Vector2(720.0 * facing_direction, 0.0)
 	if not flat_flight:
 		launch_velocity.y = -110.0
@@ -271,12 +318,27 @@ func _perform_ranged_backstep():
 	velocity.y = 0.0
 	_fire_arrow(true)
 
+func _fire_magic_bolt():
+	var bolt = MAGIC_BOLT_SCENE.instantiate()
+	get_parent().add_child(bolt)
+	var spawn_offset = Vector2(18.0 * facing_direction, -16.0)
+	var launch_velocity = Vector2(760.0 * facing_direction, randf_range(-55.0, 55.0))
+	bolt.global_position = sprite.global_position + spawn_offset
+	bolt.setup(facing_direction, magic_bolt_damage + int(attack_damage * 0.35), launch_velocity)
+
 func _reset_jump_state():
 	jumps_remaining = 2 if can_double_jump else 1
 
 func _update_health_bar():
 	health_bar.max_value = max_health
 	health_bar.value = current_health
+
+func _update_mana_bar():
+	if mana_bar == null:
+		return
+	mana_bar.visible = attack_type == "magic"
+	mana_bar.max_value = max_mana
+	mana_bar.value = current_mana
 
 func take_damage(amount: int):
 	current_health -= amount

@@ -4,7 +4,7 @@ extends CharacterBody2D
 signal died
 signal took_damage(amount: int)
 
-const ENEMY_SCENE := preload("res://scenes/game/characters/Enemy.tscn")
+const ENEMY_SCENE = preload("res://scenes/game/characters/Enemy.tscn")
 
 @export var max_health: int = 30
 @export var damage: int = 10
@@ -38,7 +38,7 @@ var current_frame_count: int = 8
 var anim_timer: float = 0.0
 var anim_speed: float = 0.16
 var current_animation: String = "idle"
-var target_player: Player
+var target_player = null
 var facing_direction: float = -1.0
 var spawn_position: Vector2
 var knockback_velocity: Vector2 = Vector2.ZERO
@@ -56,6 +56,7 @@ var boss_pending_leap_direction: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var hurtbox_shape = $Hurtbox/CollisionShape2D
 @onready var health_bar: ProgressBar = $HealthBar
 
 func _ready():
@@ -83,7 +84,7 @@ func _physics_process(delta):
 		return
 	
 	if not is_instance_valid(target_player):
-		target_player = get_tree().get_first_node_in_group("player") as Player
+		target_player = get_tree().get_first_node_in_group("player")
 	
 	if not is_on_floor():
 		velocity.y += gravity * delta
@@ -120,7 +121,7 @@ func _physics_process(delta):
 		_advance_animation(delta)
 		return
 	
-	var move_direction := 0.0
+	var move_direction = 0.0
 	if is_instance_valid(target_player):
 		var to_player = target_player.global_position - global_position
 		var horizontal_distance = absf(to_player.x)
@@ -181,7 +182,7 @@ func _apply_knockback_motion(delta):
 	knockback_velocity.x = move_toward(knockback_velocity.x, 0.0, knockback_recovery * delta)
 	knockback_velocity.y = move_toward(knockback_velocity.y, 0.0, knockback_recovery * delta)
 
-func attack(player: Player):
+func attack(player):
 	can_attack = false
 	player.take_damage(damage)
 	await get_tree().create_timer(attack_cooldown).timeout
@@ -224,7 +225,8 @@ func die():
 	if respawn_on_death:
 		_respawn_after_delay()
 		return
-	collision_shape.disabled = true
+	collision_shape.set_deferred("disabled", true)
+	hurtbox_shape.set_deferred("disabled", true)
 	queue_free()
 
 func apply_knockback(force: Vector2, duration: float = 0.18):
@@ -244,7 +246,7 @@ func _begin_boss_telegraph(direction: float):
 	boss_leap_ready = false
 
 func _start_boss_leap(direction: float):
-	var leap_direction := direction
+	var leap_direction = direction
 	if leap_direction == 0.0:
 		leap_direction = facing_direction
 	if leap_direction == 0.0:
@@ -277,9 +279,9 @@ func _try_activate_boss_phase_two():
 func _summon_phase_two_reinforcements():
 	if get_parent() == null:
 		return
-	var summon_offsets: Array[Vector2] = [Vector2(-170, -24), Vector2(170, -24)]
+	var summon_offsets = [Vector2(-170, -24), Vector2(170, -24)]
 	for offset in summon_offsets:
-		var summon = ENEMY_SCENE.instantiate() as Enemy
+		var summon = ENEMY_SCENE.instantiate()
 		get_parent().add_child(summon)
 		summon.global_position = global_position + offset
 		summon.max_health = 48
@@ -293,7 +295,8 @@ func _summon_phase_two_reinforcements():
 func _respawn_after_delay():
 	set_physics_process(false)
 	visible = false
-	collision_shape.disabled = true
+	collision_shape.set_deferred("disabled", true)
+	hurtbox_shape.set_deferred("disabled", true)
 	await get_tree().create_timer(respawn_delay).timeout
 	global_position = spawn_position
 	current_health = max_health
@@ -317,6 +320,7 @@ func _respawn_after_delay():
 	sprite.hframes = idle_frame_count
 	sprite.frame = 0
 	_update_health_bar()
-	collision_shape.disabled = false
+	collision_shape.set_deferred("disabled", false)
+	hurtbox_shape.set_deferred("disabled", false)
 	visible = true
 	set_physics_process(true)

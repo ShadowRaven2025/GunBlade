@@ -2,6 +2,12 @@ extends Node
 
 const MAX_FLOOR := 3
 const BOSS_REWARD_SCENE := "res://scenes/menus/BossReward.tscn"
+const SETTINGS_PATH := "user://settings.cfg"
+const GRAPHICS_QUALITY_FACTORS := {
+	"low": 0.75,
+	"medium": 1.0,
+	"high": 1.25
+}
 const FLOOR_SCENES := {
 	1: "res://scenes/game/levels/Dungeon.tscn",
 	2: "res://scenes/game/levels/IronFoundry.tscn",
@@ -40,6 +46,10 @@ var gold: int = 0
 var current_run_data: Dictionary = {}
 var is_paused: bool = false
 var selected_character: String = "warrior"
+var settings: Dictionary = {
+	"fullscreen": false,
+	"graphics_quality": "medium"
+}
 
 const CHARACTER_CONFIGS := {
 	"warrior": {
@@ -86,7 +96,7 @@ const CHARACTER_CONFIGS := {
 		"attack_frames": 11,
 		"attack_hit_frame": 4,
 		"attack_pose_frame": -1,
-		"attack_type": "melee",
+		"attack_type": "magic",
 		"max_health": 100,
 		"speed": 280.0,
 		"jump_velocity": -470.0,
@@ -96,7 +106,52 @@ const CHARACTER_CONFIGS := {
 }
 
 func _ready():
+	load_settings()
+	apply_display_settings()
 	load_game()
+
+func load_settings():
+	var config = ConfigFile.new()
+	var err = config.load(SETTINGS_PATH)
+	if err != OK:
+		return
+	settings["fullscreen"] = bool(config.get_value("display", "fullscreen", settings["fullscreen"]))
+	var graphics_quality = str(config.get_value("display", "graphics_quality", settings["graphics_quality"]))
+	if not GRAPHICS_QUALITY_FACTORS.has(graphics_quality):
+		graphics_quality = "medium"
+	settings["graphics_quality"] = graphics_quality
+
+func save_settings():
+	var config = ConfigFile.new()
+	config.set_value("display", "fullscreen", settings["fullscreen"])
+	config.set_value("display", "graphics_quality", settings["graphics_quality"])
+	config.save(SETTINGS_PATH)
+
+func apply_display_settings():
+	var fullscreen_enabled = bool(settings.get("fullscreen", false))
+	var window_mode = DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen_enabled else DisplayServer.WINDOW_MODE_WINDOWED
+	DisplayServer.window_set_mode(window_mode)
+	var graphics_quality = str(settings.get("graphics_quality", "medium"))
+	var scale_factor = GRAPHICS_QUALITY_FACTORS.get(graphics_quality, GRAPHICS_QUALITY_FACTORS["medium"])
+	get_window().content_scale_factor = scale_factor
+
+func set_fullscreen_enabled(enabled: bool):
+	settings["fullscreen"] = enabled
+	apply_display_settings()
+	save_settings()
+
+func is_fullscreen_enabled() -> bool:
+	return bool(settings.get("fullscreen", false))
+
+func set_graphics_quality(quality: String):
+	if not GRAPHICS_QUALITY_FACTORS.has(quality):
+		return
+	settings["graphics_quality"] = quality
+	apply_display_settings()
+	save_settings()
+
+func get_graphics_quality() -> String:
+	return str(settings.get("graphics_quality", "medium"))
 
 func toggle_pause():
 	is_paused = !is_paused
@@ -127,7 +182,7 @@ func set_selected_character(character_id: String):
 		save_game()
 
 func get_selected_character_config() -> Dictionary:
-	return CHARACTER_CONFIGS.get(selected_character, CHARACTER_CONFIGS["warrior"]) as Dictionary
+	return CHARACTER_CONFIGS.get(selected_character, CHARACTER_CONFIGS["warrior"])
 
 func next_floor():
 	current_floor = mini(current_floor + 1, MAX_FLOOR)
@@ -135,8 +190,8 @@ func next_floor():
 	save_game()
 
 func get_floor_scene_path(floor_number: int = current_floor) -> String:
-	var normalized_floor: int = clampi(floor_number, 1, MAX_FLOOR)
-	return str(FLOOR_SCENES.get(normalized_floor, FLOOR_SCENES[1]))
+	var normalized_floor := clampi(floor_number, 1, MAX_FLOOR)
+	return FLOOR_SCENES.get(normalized_floor, FLOOR_SCENES[1])
 
 func is_boss_floor(floor_number: int = current_floor) -> bool:
 	return floor_number >= MAX_FLOOR
@@ -163,23 +218,23 @@ func record_room_clear():
 
 func prepare_boss_rewards():
 	var options: Array = []
-	var start_index: int = int(current_run_data.get("rooms_cleared", 0) + gold + current_floor) % BOSS_RELICS.size()
+	var start_index: int = int(current_run_data.get("rooms_cleared", 0)) + gold + current_floor
+	start_index = start_index % BOSS_RELICS.size()
 	for i in range(3):
-		var relic: Dictionary = BOSS_RELICS[(start_index + i) % BOSS_RELICS.size()].duplicate(true)
+		var relic = BOSS_RELICS[(start_index + i) % BOSS_RELICS.size()].duplicate(true)
 		options.append(relic)
 	current_run_data["pending_boss_rewards"] = options
 	save_game()
 
 func get_pending_boss_rewards() -> Array:
-	return current_run_data.get("pending_boss_rewards", []) as Array
+	return current_run_data.get("pending_boss_rewards", [])
 
 func claim_boss_reward(relic_id: String):
 	var options: Array = get_pending_boss_rewards()
-	for relic_variant in options:
-		var relic: Dictionary = relic_variant
+	for relic in options:
 		if relic.get("id", "") != relic_id:
 			continue
-		var relics: Array = current_run_data.get("relics", []) as Array
+		var relics: Array = current_run_data.get("relics", [])
 		relics.append(relic)
 		current_run_data["relics"] = relics
 		current_run_data["last_boss_reward"] = relic
@@ -195,15 +250,14 @@ func claim_boss_reward(relic_id: String):
 
 func get_relic_ids() -> Array[String]:
 	var relic_ids: Array[String] = []
-	for relic_variant in current_run_data.get("relics", []) as Array:
-		var relic: Dictionary = relic_variant
-		var relic_id: String = str(relic.get("id", ""))
+	for relic in current_run_data.get("relics", []):
+		var relic_id := str(relic.get("id", ""))
 		if relic_id != "":
 			relic_ids.append(relic_id)
 	return relic_ids
 
 func get_player_relic_modifiers() -> Dictionary:
-	var modifiers: Dictionary = {
+	var modifiers := {
 		"bonus_health": 0,
 		"bonus_damage": 0,
 		"bonus_speed": 0.0,
@@ -218,26 +272,26 @@ func get_player_relic_modifiers() -> Dictionary:
 		match relic_id:
 			"ember_crown":
 				modifiers["bonus_damage"] += 5
-				modifiers["summary"].append("Ember Crown: +5 attack")
+				(modifiers["summary"] as Array).append("Ember Crown: +5 attack")
 			"iron_oath":
 				modifiers["bonus_health"] += 20
 				modifiers["bonus_kick_force"] += 120.0
-				modifiers["summary"].append("Iron Oath: +20 HP, stronger kick")
+				(modifiers["summary"] as Array).append("Iron Oath: +20 HP, stronger kick")
 			"moon_seal":
 				modifiers["bonus_jump"] += -28.0
 				modifiers["attack_cooldown_multiplier"] *= 0.9
 				modifiers["kick_cooldown_multiplier"] *= 0.9
-				modifiers["summary"].append("Moon Seal: faster cooldowns")
+				(modifiers["summary"] as Array).append("Moon Seal: faster cooldowns")
 			"rampart_spur":
 				modifiers["bonus_speed"] += 24.0
-				modifiers["summary"].append("Rampart Spur: +24 speed")
+				(modifiers["summary"] as Array).append("Rampart Spur: +24 speed")
 			"forgeblood_token":
 				modifiers["bonus_attack_range"] += 14.0
-				modifiers["summary"].append("Forgeblood Token: wider melee")
+				(modifiers["summary"] as Array).append("Forgeblood Token: wider melee")
 	return modifiers
 
 func get_relic_summary_text() -> String:
-	var summary: Array = get_player_relic_modifiers().get("summary", []) as Array
+	var summary: Array = get_player_relic_modifiers().get("summary", [])
 	if summary.is_empty():
 		return "No relic blessings yet"
 	return " | ".join(summary)
@@ -259,10 +313,10 @@ func load_game():
 	if FileAccess.file_exists("user://savegame.dat"):
 		var save_file = FileAccess.open("user://savegame.dat", FileAccess.READ)
 		var json_string = save_file.get_line()
-		current_run_data = JSON.parse_string(json_string) as Dictionary
+		current_run_data = JSON.parse_string(json_string)
 		current_floor = int(current_run_data.get("floor", 1))
 		gold = int(current_run_data.get("gold", 0))
-		selected_character = str(current_run_data.get("character", selected_character))
+		selected_character = current_run_data.get("character", selected_character)
 		save_file.close()
 
 func game_over():

@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/core/Enemy.gd" id="1_enemy"]
 
 [sub_resource type="RectangleShape2D" id="Shape_enemy"]
-size = Vector2(32, 32)
+size = Vector2(32, 44)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_enemy_fill"]
 bg_color = Color(0.82, 0.19, 0.22, 1)
@@ -26,11 +26,13 @@ script = ExtResource("1_enemy")
 position = Vector2(0, -8)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -6)
 shape = SubResource("Shape_enemy")
 
 [node name="Hurtbox" type="Area2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(0, -6)
 shape = SubResource("Shape_enemy")
 
 [node name="HealthBar" type="ProgressBar" parent="."]

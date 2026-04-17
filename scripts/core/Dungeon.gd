@@ -1,28 +1,28 @@
 extends Node2D
 
-const MAIN_MENU_SCENE := "res://scenes/menus/MainMenu.tscn"
-const TEST_ROOM_SCENE := "res://scenes/game/levels/TestRoom.tscn"
-const ROOM_ALERT_TEXT := {
+const MAIN_MENU_SCENE = "res://scenes/menus/MainMenu.tscn"
+const TEST_ROOM_SCENE = "res://scenes/game/levels/TestRoom.tscn"
+const ROOM_ALERT_TEXT = {
 	"res://scenes/game/levels/Dungeon.tscn": "Sweep the broken ascent",
 	"res://scenes/game/levels/IronFoundry.tscn": "Cut through the foundry watch",
 	"res://scenes/game/levels/MoonCrypt.tscn": "Silence the crypt sentries",
 	"res://scenes/game/levels/BrokenRampart.tscn": "Retake the shattered rampart"
 }
-const ROOM_CLEAR_TEXT := {
+const ROOM_CLEAR_TEXT = {
 	"res://scenes/game/levels/Dungeon.tscn": "Claim the next floor at the orange gate",
 	"res://scenes/game/levels/IronFoundry.tscn": "The forge is yours. Reach the orange gate",
 	"res://scenes/game/levels/MoonCrypt.tscn": "The crypt is clear. Reach the orange gate",
 	"res://scenes/game/levels/BrokenRampart.tscn": "The wall is reclaimed. Reach the orange gate"
 }
 
-@onready var player: Player = $Player
+@onready var player = $Player
 @onready var room_status_label: Label = $CanvasLayer/HUD/VBox/TopRow/RoomStatus
 @onready var floor_value_label: Label = $CanvasLayer/HUD/VBox/StatsRow/FloorValue
 @onready var enemies_value_label: Label = $CanvasLayer/HUD/VBox/StatsRow/EnemiesValue
 @onready var gold_value_label: Label = $CanvasLayer/HUD/VBox/StatsRow/GoldValue
 @onready var state_label: Label = $CanvasLayer/HUD/VBox/StatePanel/StateLabel
 @onready var hint_label: Label = $CanvasLayer/HUD/VBox/Hint
-@onready var exit_area: Area2D = get_node_or_null("ExitArea")
+@onready var exit_area = get_node_or_null("ExitArea")
 
 var player_in_exit_area: bool = false
 var room_reward_granted: bool = false
@@ -31,22 +31,20 @@ func _ready():
 	_apply_selected_character()
 	player.add_to_group("player")
 	player.died.connect(_on_player_died)
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		enemy.died.connect(_on_enemy_died)
 	if exit_area != null:
 		exit_area.body_entered.connect(_on_exit_area_body_entered)
 		exit_area.body_exited.connect(_on_exit_area_body_exited)
 	_update_hud()
 
-func register_enemy(enemy: Enemy):
+func register_enemy(enemy):
 	if enemy == null or not is_instance_valid(enemy):
 		return
 	if not enemy.died.is_connected(_on_enemy_died):
 		enemy.died.connect(_on_enemy_died)
 
 func _apply_selected_character():
-	var config := Game.get_selected_character_config()
-	var relic_modifiers := Game.get_player_relic_modifiers()
+	var config = Game.get_selected_character_config()
+	var relic_modifiers = Game.get_player_relic_modifiers()
 	player.max_health = config.get("max_health", player.max_health)
 	player.max_health += relic_modifiers.get("bonus_health", 0)
 	player.current_health = player.max_health
@@ -96,9 +94,9 @@ func _process(_delta):
 	_update_hud()
 
 func _update_hud():
-	var enemies_left := _get_alive_enemy_count()
-	var is_test_room := scene_file_path == TEST_ROOM_SCENE
-	var is_boss_room := not is_test_room and Game.is_boss_floor()
+	var enemies_left = _get_alive_enemy_count()
+	var is_test_room = scene_file_path == TEST_ROOM_SCENE
+	var is_boss_room = not is_test_room and Game.is_boss_floor()
 	floor_value_label.text = "T%s" % Game.current_floor if is_test_room else "%02d" % Game.current_floor
 	enemies_value_label.text = str(enemies_left)
 	gold_value_label.text = str(Game.gold)
@@ -154,7 +152,7 @@ func _get_room_alert_text() -> String:
 	return ROOM_ALERT_TEXT.get(scene_file_path, "Sweep the cells")
 
 func _get_room_clear_text() -> String:
-	var clear_text: String = str(ROOM_CLEAR_TEXT.get(scene_file_path, "Press E at the orange gate to claim the next floor"))
+	var clear_text = str(ROOM_CLEAR_TEXT.get(scene_file_path, "Press E at the orange gate to claim the next floor"))
 	return "%s" % clear_text
 
 func _grant_room_reward_if_ready():
@@ -164,7 +162,7 @@ func _grant_room_reward_if_ready():
 		return
 	if _get_alive_enemy_count() > 0:
 		return
-	var reward := _get_room_reward_amount()
+	var reward = _get_room_reward_amount()
 	Game.add_gold(reward)
 	Game.record_room_clear()
 	room_reward_granted = true
@@ -186,7 +184,7 @@ func _use_exit():
 		get_tree().change_scene_to_file(Game.BOSS_REWARD_SCENE)
 		return
 	Game.next_floor()
-	get_tree().change_scene_to_file(TEST_ROOM_SCENE)
+	get_tree().change_scene_to_file(Game.get_floor_scene_path())
 
 func _on_exit_area_body_entered(body: Node):
 	if body == player:
@@ -199,7 +197,7 @@ func _on_exit_area_body_exited(body: Node):
 		_update_hud()
 
 func _get_alive_enemy_count() -> int:
-	var count := 0
+	var count = 0
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(enemy):
 			count += 1

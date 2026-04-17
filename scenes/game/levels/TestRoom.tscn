@@ -359,6 +359,16 @@ show_percentage = false
 theme_override_styles/background = SubResource("StyleBoxFlat_player_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_player_fill")
 
+[node name="ManaBar" type="ProgressBar" parent="Player"]
+offset_left = -30.0
+offset_top = -58.0
+offset_right = 30.0
+offset_bottom = -50.0
+value = 100.0
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_player_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_player_fill")
+
 [node name="Enemy" parent="." instance=ExtResource("4_enemy")]
 position = Vector2(956, 440)
 max_health = 32
