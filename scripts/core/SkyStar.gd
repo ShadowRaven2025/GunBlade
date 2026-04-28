@@ -13,11 +13,13 @@ var can_split: bool = true
 var split_count: int = 4
 var split_damage: int = 5
 var split_speed: float = 250.0
+var direct_hit_damage_multiplier: float = 1.0
 var star_scale: float = 1.0
 var lifetime_left: float = 0.0
 var has_exploded: bool = false
 var direct_hit_enemy: Enemy = null
 var uses_gravity: bool = true
+var exploded_on_ground: bool = false
 
 @onready var visual: Node2D = $Visual
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
@@ -32,6 +34,7 @@ func setup(config: Dictionary):
 	split_count = int(config.get("split_count", split_count))
 	split_damage = int(config.get("split_damage", split_damage))
 	split_speed = float(config.get("split_speed", split_speed))
+	direct_hit_damage_multiplier = float(config.get("direct_hit_damage_multiplier", direct_hit_damage_multiplier))
 	star_scale = float(config.get("scale", star_scale))
 	splash_radius = float(config.get("splash_radius", splash_radius))
 	max_lifetime = float(config.get("max_lifetime", max_lifetime))
@@ -41,7 +44,7 @@ func setup(config: Dictionary):
 
 func _ready():
 	body_entered.connect(_on_body_entered)
-	if lifetime_left <= 0.0:
+	if max_lifetime > 0.0 and lifetime_left <= 0.0:
 		lifetime_left = max_lifetime
 
 func _physics_process(delta: float):
@@ -50,28 +53,32 @@ func _physics_process(delta: float):
 	var movement := velocity * delta
 	global_position += movement
 	rotation += delta * 4.8 * direction
+	if max_lifetime <= 0.0:
+		return
 	lifetime_left = max(lifetime_left - delta, 0.0)
 	if lifetime_left == 0.0:
+		exploded_on_ground = true
 		explode()
 
 func _on_body_entered(body: Node):
 	if body is Enemy:
 		direct_hit_enemy = body
-		body.take_damage(damage)
+		body.take_damage(maxi(1, int(round(damage * direct_hit_damage_multiplier))))
 		explode()
 		return
 	if body is TileMapLayer or body is StaticBody2D:
+		exploded_on_ground = true
 		explode()
 
 func explode():
 	if has_exploded:
 		return
 	has_exploded = true
-	monitoring = false
-	monitorable = false
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
 	collision_shape.set_deferred("disabled", true)
 	_damage_nearby_enemies()
-	if can_split:
+	if can_split and exploded_on_ground:
 		call_deferred("_spawn_split_stars")
 	call_deferred("queue_free")
 
@@ -108,8 +115,8 @@ func _spawn_split_stars():
 			"split_count": 0,
 			"split_damage": 0,
 			"split_speed": split_speed * 0.55,
-			"scale": maxf(star_scale * 0.55, 0.4),
-			"splash_radius": maxf(splash_radius * 0.52, 18.0),
+			"scale": maxf(star_scale * 0.35, 0.3),
+			"splash_radius": maxf(splash_radius * 0.32, 12.0),
 			"max_lifetime": 0.9,
 			"uses_gravity": false
 		})

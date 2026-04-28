@@ -256,8 +256,8 @@ func _get_max_starfall_charge_from_mana() -> float:
 func _cast_starfall(charge_ratio: float):
 	var star_count := starfall_base_count + int(round(starfall_extra_count * charge_ratio))
 	var main_damage := starfall_base_damage + int(round(starfall_extra_damage * charge_ratio)) + int(attack_damage * 0.4)
-	var split_damage: int = maxi(4, int(round(main_damage * 0.45)))
-	var split_count := 3 + int(round(2.0 * charge_ratio))
+	var split_damage: int = maxi(2, int(round(main_damage * 0.22)))
+	var split_count := 8 + int(round(6.0 * charge_ratio))
 	var scale_value := lerpf(0.9, 1.8, charge_ratio)
 	var splash_radius := lerpf(34.0, 68.0, charge_ratio)
 	var viewport_width: float = get_viewport_rect().size.x
@@ -277,10 +277,11 @@ func _cast_starfall(charge_ratio: float):
 			"can_split": true,
 			"split_count": split_count,
 			"split_damage": split_damage,
-			"split_speed": lerpf(180.0, 300.0, charge_ratio),
+			"split_speed": lerpf(220.0, 360.0, charge_ratio),
+			"direct_hit_damage_multiplier": 5.0,
 			"scale": scale_value,
 			"splash_radius": splash_radius,
-			"max_lifetime": 1.9,
+			"max_lifetime": 0.0,
 			"uses_gravity": true
 		})
 

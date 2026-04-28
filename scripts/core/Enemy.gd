@@ -273,8 +273,8 @@ func _try_activate_boss_phase_two():
 	boss_leap_cooldown = max(boss_leap_cooldown - 0.8, 1.2)
 	modulate = base_modulate.lerp(Color(1, 0.25, 0.2, 1), 0.45)
 	if not boss_phase_two_summoned:
-		_summon_phase_two_reinforcements()
 		boss_phase_two_summoned = true
+		call_deferred("_summon_phase_two_reinforcements")
 
 func _summon_phase_two_reinforcements():
 	if get_parent() == null:
