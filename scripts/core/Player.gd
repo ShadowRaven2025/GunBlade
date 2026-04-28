@@ -246,7 +246,7 @@ func _get_max_starfall_charge_from_mana() -> float:
 func _cast_starfall(charge_ratio: float):
 	var star_count := starfall_base_count + int(round(starfall_extra_count * charge_ratio))
 	var main_damage := starfall_base_damage + int(round(starfall_extra_damage * charge_ratio)) + int(attack_damage * 0.4)
-	var split_damage := max(4, int(round(main_damage * 0.45)))
+	var split_damage: int = maxi(4, int(round(main_damage * 0.45)))
 	var split_count := 3 + int(round(2.0 * charge_ratio))
 	var scale_value := lerpf(0.9, 1.8, charge_ratio)
 	var splash_radius := lerpf(34.0, 68.0, charge_ratio)
