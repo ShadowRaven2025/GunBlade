@@ -4,6 +4,7 @@ signal died
 
 const ARROW_SCENE = preload("res://scenes/game/projectiles/Arrow.tscn")
 const MAGIC_BOLT_SCENE = preload("res://scenes/game/projectiles/MagicBolt.tscn")
+const SKY_STAR_SCENE = preload("res://scenes/game/projectiles/SkyStar.tscn")
 
 @export var speed: float = 260.0
 @export var jump_velocity: float = -420.0
@@ -28,6 +29,14 @@ const MAGIC_BOLT_SCENE = preload("res://scenes/game/projectiles/MagicBolt.tscn")
 @export var magic_mana_drain_per_second: float = 24.0
 @export var magic_mana_regen_per_second: float = 16.0
 @export var magic_bolt_damage: int = 7
+@export var starfall_max_charge_time: float = 2.2
+@export var starfall_min_mana_cost: float = 12.0
+@export var starfall_max_mana_cost: float = 42.0
+@export var starfall_base_damage: int = 14
+@export var starfall_extra_damage: int = 16
+@export var starfall_base_count: int = 2
+@export var starfall_extra_count: int = 3
+@export var starfall_spawn_spread: float = 120.0
 
 var current_health: int
 var can_attack: bool = true
@@ -55,6 +64,8 @@ var backstep_direction: float = 0.0
 var current_mana: float = 0.0
 var magic_shot_time_left: float = 0.0
 var is_channeling_magic: bool = false
+var is_charging_starfall: bool = false
+var starfall_charge_time: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var health_bar: ProgressBar = $HealthBar
@@ -124,11 +135,12 @@ func _physics_process(delta):
 		velocity.y += gravity * delta
 	
 	_update_magic_attack(delta)
+	_update_starfall_charge(delta)
 
 	if backstep_time_left > 0.0:
 		backstep_time_left = max(backstep_time_left - delta, 0.0)
 		velocity.x = backstep_direction * ranged_backstep_speed
-	elif is_attacking or is_channeling_magic:
+	elif is_attacking or is_channeling_magic or is_charging_starfall:
 		velocity.x = move_toward(velocity.x, 0.0, speed * 0.15)
 	else:
 		velocity.x = input_axis * speed
@@ -137,13 +149,21 @@ func _physics_process(delta):
 	move_and_slide()
 	_animate(delta)
 	
-	if Input.is_action_just_pressed("kick") and can_attack and not is_channeling_magic:
+	if attack_type == "magic":
+		if Input.is_action_just_pressed("kick") and can_attack and not is_attacking and not is_channeling_magic:
+			_begin_starfall_charge()
+	elif Input.is_action_just_pressed("kick") and can_attack and not is_channeling_magic:
 		attack("kick")
 	elif attack_type != "magic" and Input.is_action_just_pressed("attack") and can_attack:
 		attack("primary")
 
 func _update_magic_attack(delta):
 	if attack_type != "magic":
+		return
+	if is_charging_starfall:
+		is_channeling_magic = true
+		magic_shot_time_left = 0.0
+		_update_mana_bar()
 		return
 	if is_attacking:
 		is_channeling_magic = false
@@ -166,6 +186,90 @@ func _update_magic_attack(delta):
 	if current_mana <= 0.0:
 		is_channeling_magic = false
 	_update_mana_bar()
+
+func _update_starfall_charge(delta):
+	if attack_type != "magic":
+		return
+	if not is_charging_starfall:
+		return
+	if not Input.is_action_pressed("kick"):
+		_release_starfall_charge()
+		return
+	var max_charge_for_mana := _get_max_starfall_charge_from_mana()
+	var charge_cap := min(starfall_max_charge_time, max_charge_for_mana)
+	starfall_charge_time = min(starfall_charge_time + delta, charge_cap)
+	is_channeling_magic = true
+	_update_mana_bar()
+
+func _begin_starfall_charge():
+	if current_mana < starfall_min_mana_cost:
+		return
+	is_charging_starfall = true
+	is_channeling_magic = true
+	starfall_charge_time = 0.0
+	can_attack = false
+	anim_timer = 0.0
+	current_frame = 0
+	_set_animation("attack", attack_texture, _get_attack_texture_frame_count())
+
+func _release_starfall_charge():
+	if not is_charging_starfall:
+		return
+	is_charging_starfall = false
+	is_channeling_magic = false
+	var normalized_charge := _get_starfall_charge_ratio()
+	var mana_cost := _get_starfall_mana_cost(normalized_charge)
+	var can_cast := current_mana >= mana_cost
+	if can_cast:
+		current_mana -= mana_cost
+		_cast_starfall(normalized_charge)
+	current_frame = 0
+	can_attack = true
+	_update_mana_bar()
+
+func _get_starfall_charge_ratio() -> float:
+	if starfall_max_charge_time <= 0.0:
+		return 0.0
+	return clampf(starfall_charge_time / starfall_max_charge_time, 0.0, 1.0)
+
+func _get_starfall_mana_cost(charge_ratio: float) -> float:
+	return lerpf(starfall_min_mana_cost, starfall_max_mana_cost, clampf(charge_ratio, 0.0, 1.0))
+
+func _get_max_starfall_charge_from_mana() -> float:
+	if starfall_max_mana_cost <= starfall_min_mana_cost:
+		return starfall_max_charge_time
+	var affordable_ratio := clampf((current_mana - starfall_min_mana_cost) / (starfall_max_mana_cost - starfall_min_mana_cost), 0.0, 1.0)
+	if current_mana < starfall_min_mana_cost:
+		return 0.0
+	return affordable_ratio * starfall_max_charge_time
+
+func _cast_starfall(charge_ratio: float):
+	var star_count := starfall_base_count + int(round(starfall_extra_count * charge_ratio))
+	var main_damage := starfall_base_damage + int(round(starfall_extra_damage * charge_ratio)) + int(attack_damage * 0.4)
+	var split_damage := max(4, int(round(main_damage * 0.45)))
+	var split_count := 3 + int(round(2.0 * charge_ratio))
+	var scale_value := lerpf(0.9, 1.8, charge_ratio)
+	var splash_radius := lerpf(34.0, 68.0, charge_ratio)
+	var mouse_world := get_global_mouse_position()
+	for index in range(max(star_count, 1)):
+		var star = SKY_STAR_SCENE.instantiate()
+		get_parent().add_child(star)
+		var offset_ratio := 0.5 if star_count <= 1 else float(index) / float(star_count - 1)
+		var horizontal_offset := lerpf(-starfall_spawn_spread, starfall_spawn_spread, offset_ratio)
+		horizontal_offset += randf_range(-22.0, 22.0)
+		star.global_position = Vector2(mouse_world.x + horizontal_offset, global_position.y - 340.0 - randf_range(40.0, 160.0))
+		star.setup({
+			"direction": facing_direction,
+			"velocity": Vector2(randf_range(-48.0, 48.0), lerpf(340.0, 520.0, charge_ratio)),
+			"damage": main_damage,
+			"can_split": true,
+			"split_count": split_count,
+			"split_damage": split_damage,
+			"split_speed": lerpf(180.0, 300.0, charge_ratio),
+			"scale": scale_value,
+			"splash_radius": splash_radius,
+			"max_lifetime": 1.9
+		})
 
 func _regen_mana(delta):
 	current_mana = min(current_mana + magic_mana_regen_per_second * delta, max_mana)
@@ -246,6 +350,8 @@ func attack(mode: String = "primary"):
 
 func _get_attack_frame_count() -> int:
 	if current_attack_mode == "kick":
+		if attack_type == "magic":
+			return attack_frame_count
 		return mini(4, attack_frame_count)
 	return attack_frame_count
 
@@ -256,6 +362,8 @@ func _get_attack_texture_frame_count() -> int:
 
 func _perform_attack_hit():
 	if current_attack_mode == "kick":
+		if attack_type == "magic":
+			return
 		if attack_type == "ranged":
 			_perform_ranged_backstep()
 			return

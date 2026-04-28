@@ -64,7 +64,7 @@ const CHARACTER_CONFIGS := {
 		"attack_type": "melee",
 		"max_health": 120,
 		"speed": 265.0,
-		"jump_velocity": -455.0,
+		"jump_velocity": -475.0,
 		"attack_damage": 16,
 		"attack_range": 54.0
 	},
@@ -81,7 +81,7 @@ const CHARACTER_CONFIGS := {
 		"attack_type": "ranged",
 		"max_health": 90,
 		"speed": 295.0,
-		"jump_velocity": -480.0,
+		"jump_velocity": -500.0,
 		"attack_damage": 18,
 		"attack_range": 72.0,
 		"double_jump": true
@@ -99,9 +99,20 @@ const CHARACTER_CONFIGS := {
 		"attack_type": "magic",
 		"max_health": 100,
 		"speed": 280.0,
-		"jump_velocity": -470.0,
+		"jump_velocity": -490.0,
 		"attack_damage": 13,
-		"attack_range": 50.0
+		"attack_range": 50.0,
+		"max_mana": 120.0,
+		"magic_mana_drain_per_second": 20.0,
+		"magic_mana_regen_per_second": 14.0,
+		"magic_bolt_damage": 8,
+		"starfall_max_charge_time": 2.3,
+		"starfall_min_mana_cost": 14.0,
+		"starfall_max_mana_cost": 44.0,
+		"starfall_base_damage": 14,
+		"starfall_extra_damage": 18,
+		"starfall_base_count": 2,
+		"starfall_extra_count": 3
 	}
 }
 

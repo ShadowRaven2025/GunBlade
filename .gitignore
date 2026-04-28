@@ -2,7 +2,6 @@
 .godot/
 *.import
 *.uid
-assets/
 
 # Build
 build/

@@ -56,6 +56,17 @@ func _apply_selected_character():
 	player.attack_damage += relic_modifiers.get("bonus_damage", 0)
 	player.attack_range = config.get("attack_range", player.attack_range)
 	player.attack_range += relic_modifiers.get("bonus_attack_range", 0.0)
+	player.max_mana = config.get("max_mana", player.max_mana)
+	player.magic_mana_drain_per_second = config.get("magic_mana_drain_per_second", player.magic_mana_drain_per_second)
+	player.magic_mana_regen_per_second = config.get("magic_mana_regen_per_second", player.magic_mana_regen_per_second)
+	player.magic_bolt_damage = config.get("magic_bolt_damage", player.magic_bolt_damage)
+	player.starfall_max_charge_time = config.get("starfall_max_charge_time", player.starfall_max_charge_time)
+	player.starfall_min_mana_cost = config.get("starfall_min_mana_cost", player.starfall_min_mana_cost)
+	player.starfall_max_mana_cost = config.get("starfall_max_mana_cost", player.starfall_max_mana_cost)
+	player.starfall_base_damage = config.get("starfall_base_damage", player.starfall_base_damage)
+	player.starfall_extra_damage = config.get("starfall_extra_damage", player.starfall_extra_damage)
+	player.starfall_base_count = config.get("starfall_base_count", player.starfall_base_count)
+	player.starfall_extra_count = config.get("starfall_extra_count", player.starfall_extra_count)
 	player.kick_knockback_force = 340.0 + relic_modifiers.get("bonus_kick_force", 0.0)
 	player.attack_cooldown = 0.42 * relic_modifiers.get("attack_cooldown_multiplier", 1.0)
 	player.kick_cooldown = 0.52 * relic_modifiers.get("kick_cooldown_multiplier", 1.0)
@@ -71,6 +82,8 @@ func _apply_selected_character():
 		config.get("attack_type", "melee"),
 		bool(config.get("double_jump", false))
 	)
+	player.current_mana = player.max_mana
+	player._update_mana_bar()
 	player._update_health_bar()
 
 func _on_enemy_died():
@@ -139,13 +152,13 @@ func _update_hud():
 
 func _get_hint_text(is_test_room: bool, is_boss_room: bool, enemies_left: int) -> String:
 	if enemies_left <= 0 and player_in_exit_area:
-		return "E use gate  |  LMB attack  |  RMB kick  |  Esc retreat"
+		return "E use gate  |  LMB attack  |  RMB skill  |  Esc retreat" if player.attack_type == "magic" else "E use gate  |  LMB attack  |  RMB kick  |  Esc retreat"
 	if is_test_room:
 		return "Clear the guard, then press E at the blue gate"
 	if is_boss_room:
-		return "LMB attack  |  RMB kick for knockback  |  Space jump"
+		return "LMB cast bolts  |  Hold RMB call stars  |  Space jump" if player.attack_type == "magic" else "LMB attack  |  RMB kick for knockback  |  Space jump"
 	if enemies_left > 0:
-		return "A D move  |  Space jump  |  LMB attack  |  RMB kick"
+		return "A D move  |  Space jump  |  LMB cast  |  Hold RMB starfall" if player.attack_type == "magic" else "A D move  |  Space jump  |  LMB attack  |  RMB kick"
 	return "Room clear: reach the orange gate and press E"
 
 func _get_room_alert_text() -> String:

@@ -8,7 +8,7 @@
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/Tower.png" id="6_tower"]
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/House2.png" id="7_house"]
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Buildings/Black Buildings/Barracks.png" id="8_barracks"]
-[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/cut/Banners/Banner_0_3.png" id="9_banner"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/cut/Banners/Banner_r0_c3.png" id="9_banner"]
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Particle FX/Fire_01.png" id="10_fire"]
 
 [sub_resource type="RectangleShape2D" id="Shape_player"]
