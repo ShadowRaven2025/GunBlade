@@ -13,6 +13,7 @@ const FLOOR_SCENES := {
 	2: "res://scenes/game/levels/IronFoundry.tscn",
 	3: "res://scenes/game/levels/WardenThrone.tscn"
 }
+const SECRET_BOSS_SCENE := "res://scenes/game/levels/SecretBossRoom.tscn"
 const BOSS_RELICS := [
 	{
 		"id": "ember_crown",
@@ -113,7 +114,40 @@ const CHARACTER_CONFIGS := {
 		"starfall_extra_damage": 18,
 		"starfall_base_count": 5,
 		"starfall_extra_count": 7
+	},
+	"secret_priest": {
+		"label": "Secret Priest",
+		"idle": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Idle.png",
+		"run": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Run.png",
+		"attack": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Heal.png",
+		"idle_frames": 6,
+		"run_frames": 4,
+		"attack_frames": 11,
+		"attack_hit_frame": 4,
+		"attack_pose_frame": -1,
+		"attack_type": "magic",
+		"max_health": 115,
+		"speed": 292.0,
+		"jump_velocity": -505.0,
+		"attack_damage": 16,
+		"attack_range": 58.0,
+		"max_mana": 140.0,
+		"magic_mana_drain_per_second": 16.0,
+		"magic_mana_regen_per_second": 18.0,
+		"magic_bolt_damage": 12,
+		"starfall_max_charge_time": 1.9,
+		"starfall_min_mana_cost": 6.0,
+		"starfall_max_mana_cost": 24.0,
+		"starfall_base_damage": 16,
+		"starfall_extra_damage": 22,
+		"starfall_base_count": 6,
+		"starfall_extra_count": 8,
+		"modulate": Color(0.72, 0.38, 1, 1)
 	}
+}
+
+var persistent_unlocks: Dictionary = {
+	"secret_priest_unlocked": false
 }
 
 func _ready():
@@ -168,7 +202,8 @@ func toggle_pause():
 	is_paused = !is_paused
 	get_tree().paused = is_paused
 
-func new_game():
+func new_game(secret_route: bool = false):
+	var secret_priest_was_unlocked := is_secret_priest_unlocked()
 	current_floor = 1
 	gold = 0
 	current_run_data = {
@@ -182,11 +217,16 @@ func new_game():
 		"relics": [],
 		"enemies_killed": 0,
 		"damage_dealt": 0,
-		"items_collected": 0
+		"items_collected": 0,
+		"secret_route": secret_route,
+		"secret_step": 0,
+		"secret_priest_unlocked": secret_priest_was_unlocked
 	}
 	save_game()
 
 func set_selected_character(character_id: String):
+	if character_id == "secret_priest" and not is_secret_priest_unlocked():
+		return
 	if CHARACTER_CONFIGS.has(character_id):
 		selected_character = character_id
 		current_run_data["character"] = character_id
@@ -194,6 +234,24 @@ func set_selected_character(character_id: String):
 
 func get_selected_character_config() -> Dictionary:
 	return CHARACTER_CONFIGS.get(selected_character, CHARACTER_CONFIGS["warrior"])
+
+func is_secret_route_active() -> bool:
+	return bool(current_run_data.get("secret_route", false))
+
+func get_secret_step() -> int:
+	return int(current_run_data.get("secret_step", 0))
+
+func set_secret_step(step: int):
+	current_run_data["secret_step"] = step
+	save_game()
+
+func unlock_secret_priest():
+	persistent_unlocks["secret_priest_unlocked"] = true
+	current_run_data["secret_priest_unlocked"] = true
+	save_game()
+
+func is_secret_priest_unlocked() -> bool:
+	return bool(persistent_unlocks.get("secret_priest_unlocked", false)) or bool(current_run_data.get("secret_priest_unlocked", false))
 
 func next_floor():
 	current_floor = mini(current_floor + 1, MAX_FLOOR)
@@ -328,6 +386,7 @@ func load_game():
 		current_floor = int(current_run_data.get("floor", 1))
 		gold = int(current_run_data.get("gold", 0))
 		selected_character = current_run_data.get("character", selected_character)
+		persistent_unlocks["secret_priest_unlocked"] = bool(current_run_data.get("secret_priest_unlocked", false))
 		save_file.close()
 
 func game_over():

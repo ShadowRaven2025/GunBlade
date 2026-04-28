@@ -428,6 +428,17 @@ limit_bottom = 720
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
+[node name="SecretFlash" type="Label" parent="CanvasLayer"]
+visible = false
+offset_left = 402.0
+offset_top = 128.0
+offset_right = 878.0
+offset_bottom = 168.0
+theme_override_colors/font_color = Color(0.74, 0.35, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "A violet covenant answers."
+horizontal_alignment = 1
+
 [node name="HUD" type="MarginContainer" parent="CanvasLayer"]
 offset_left = 26.0
 offset_top = 22.0

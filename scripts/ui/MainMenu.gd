@@ -1,15 +1,15 @@
 extends Control
 
 func _ready():
-	$Panel/VBoxContainer/NewGame.pressed.connect(_on_new_game_pressed)
-	$Panel/VBoxContainer/TestRoom.pressed.connect(_on_test_room_pressed)
-	$Panel/VBoxContainer/SettingsCard/GraphicsRow/GraphicsOption.item_selected.connect(_on_graphics_selected)
-	$Panel/VBoxContainer/SettingsCard/FullscreenToggle.toggled.connect(_on_fullscreen_toggled)
-	$Panel/VBoxContainer/Quit.pressed.connect(_on_quit_pressed)
+	$Panel/Content/LeftColumn/ButtonRow/NewGame.pressed.connect(_on_new_game_pressed)
+	$Panel/Content/LeftColumn/ButtonRow/TestRoom.pressed.connect(_on_test_room_pressed)
+	$Panel/Content/RightColumn/SettingsCard/GraphicsRow/GraphicsOption.item_selected.connect(_on_graphics_selected)
+	$Panel/Content/RightColumn/SettingsCard/FullscreenToggle.toggled.connect(_on_fullscreen_toggled)
+	$Panel/Content/LeftColumn/ButtonRow/Quit.pressed.connect(_on_quit_pressed)
 	_setup_settings_ui()
 
 func _setup_settings_ui():
-	var graphics_option = $Panel/VBoxContainer/SettingsCard/GraphicsRow/GraphicsOption
+	var graphics_option = $Panel/Content/RightColumn/SettingsCard/GraphicsRow/GraphicsOption
 	graphics_option.clear()
 	graphics_option.add_item("Low")
 	graphics_option.add_item("Medium")
@@ -21,7 +21,7 @@ func _setup_settings_ui():
 			graphics_option.select(2)
 		_:
 			graphics_option.select(1)
-	$Panel/VBoxContainer/SettingsCard/FullscreenToggle.button_pressed = Game.is_fullscreen_enabled()
+	$Panel/Content/RightColumn/SettingsCard/FullscreenToggle.button_pressed = Game.is_fullscreen_enabled()
 
 func _on_new_game_pressed():
 	get_tree().change_scene_to_file("res://scenes/menus/CharacterSelect.tscn")

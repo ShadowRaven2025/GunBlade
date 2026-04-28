@@ -1,56 +1,56 @@
-[gd_scene load_steps=4 format=3 uid="uid://main_menu"]
+[gd_scene load_steps=8 format=3 uid="uid://main_menu"]
 
 [ext_resource type="Script" path="res://scripts/ui/MainMenu.gd" id="1_menu"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_panel"]
-bg_color = Color(0.05, 0.06, 0.09, 0.94)
+bg_color = Color(0.055, 0.047, 0.038, 0.96)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.73, 0.58, 0.31, 0.9)
-corner_radius_top_left = 22
-corner_radius_top_right = 22
-corner_radius_bottom_right = 22
-corner_radius_bottom_left = 22
-shadow_color = Color(0, 0, 0, 0.35)
-shadow_size = 10
+border_color = Color(0.86, 0.47, 0.18, 0.88)
+corner_radius_top_left = 28
+corner_radius_top_right = 28
+corner_radius_bottom_right = 28
+corner_radius_bottom_left = 28
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 14
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_normal"]
-bg_color = Color(0.14, 0.12, 0.1, 0.95)
+bg_color = Color(0.16, 0.095, 0.055, 0.98)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.58, 0.45, 0.24, 0.95)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
+border_color = Color(0.58, 0.28, 0.11, 0.95)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
-bg_color = Color(0.22, 0.17, 0.11, 0.98)
+bg_color = Color(0.28, 0.14, 0.06, 0.98)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.95, 0.78, 0.37, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
+border_color = Color(1, 0.62, 0.25, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_pressed"]
-bg_color = Color(0.11, 0.18, 0.21, 0.98)
+bg_color = Color(0.08, 0.19, 0.17, 0.98)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.47, 0.84, 0.98, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
+border_color = Color(0.35, 0.95, 0.76, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_focus"]
 draw_center = false
@@ -58,23 +58,35 @@ border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.47, 0.84, 0.98, 0.95)
-corner_radius_top_left = 16
-corner_radius_top_right = 16
-corner_radius_bottom_right = 16
-corner_radius_bottom_left = 16
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info_card"]
-bg_color = Color(0.1, 0.11, 0.15, 0.8)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.35, 0.41, 0.5, 0.65)
+border_color = Color(0.35, 0.95, 0.76, 0.95)
 corner_radius_top_left = 18
 corner_radius_top_right = 18
 corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_info_card"]
+bg_color = Color(0.105, 0.085, 0.075, 0.82)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.32, 0.18, 0.58)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_side_card"]
+bg_color = Color(0.035, 0.052, 0.052, 0.78)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.26, 0.7, 0.58, 0.42)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -90,59 +102,64 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.03, 0.04, 0.06, 1)
+color = Color(0.028, 0.025, 0.022, 1)
 
-[node name="LeftGlow" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 0
-offset_left = -80.0
-offset_top = 86.0
-offset_right = 300.0
-offset_bottom = 668.0
-color = Color(0.14, 0.26, 0.34, 0.18)
-
-[node name="RightGlow" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 0
-offset_left = 949.0
-offset_top = 54.0
-offset_right = 1349.0
-offset_bottom = 634.0
-color = Color(0.42, 0.23, 0.1, 0.14)
-
-[node name="Glow" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -390.0
-offset_top = -210.0
-offset_right = 390.0
-offset_bottom = 210.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.23, 0.18, 0.09, 0.18)
-
-[node name="FrameTop" type="ColorRect" parent="."]
+[node name="DawnBand" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 3.0
+offset_top = 82.0
+offset_bottom = 286.0
 grow_horizontal = 2
-color = Color(0.8, 0.66, 0.35, 0.5)
+color = Color(0.58, 0.22, 0.08, 0.17)
 
-[node name="FrameBottom" type="ColorRect" parent="."]
+[node name="ColdMist" type="ColorRect" parent="."]
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -3.0
+offset_top = -265.0
 grow_horizontal = 2
 grow_vertical = 0
-color = Color(0.8, 0.66, 0.35, 0.35)
+color = Color(0.04, 0.18, 0.16, 0.2)
+
+[node name="LeftEmber" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = -120.0
+offset_top = 40.0
+offset_right = 364.0
+offset_bottom = 704.0
+color = Color(0.76, 0.31, 0.08, 0.16)
+
+[node name="RightRune" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_left = 904.0
+offset_top = 20.0
+offset_right = 1406.0
+offset_bottom = 646.0
+color = Color(0.04, 0.46, 0.38, 0.13)
+
+[node name="TopRule" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 4.0
+grow_horizontal = 2
+color = Color(0.95, 0.45, 0.16, 0.55)
+
+[node name="BottomRule" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -4.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.2, 0.86, 0.66, 0.34)
 
 [node name="Panel" type="Panel" parent="."]
 layout_mode = 1
@@ -151,89 +168,172 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -290.0
-offset_top = -215.0
-offset_right = 290.0
-offset_bottom = 215.0
+offset_left = -545.0
+offset_top = -260.0
+offset_right = 545.0
+offset_bottom = 260.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_menu_panel")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+[node name="Content" type="HBoxContainer" parent="Panel"]
 layout_mode = 0
 offset_left = 34.0
 offset_top = 30.0
-offset_right = 546.0
-offset_bottom = 396.0
-theme_override_constants/separation = 16
+offset_right = 1056.0
+offset_bottom = 490.0
+theme_override_constants/separation = 28
 
-[node name="Eyebrow" type="Label" parent="Panel/VBoxContainer"]
+[node name="LeftColumn" type="VBoxContainer" parent="Panel/Content"]
+custom_minimum_size = Vector2(570, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.92, 0.79, 0.48, 0.95)
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="Eyebrow" type="Label" parent="Panel/Content/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.62, 0.28, 0.98)
 theme_override_font_sizes/font_size = 14
-text = "BROKEN KEEP EXPEDITION"
+text = "PRISON BELOW THE ASHEN KEEP"
 
-[node name="Title" type="Label" parent="Panel/VBoxContainer"]
+[node name="Title" type="Label" parent="Panel/Content/LeftColumn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.97, 1, 1)
-theme_override_font_sizes/font_size = 40
+theme_override_colors/font_color = Color(1, 0.96, 0.86, 1)
+theme_override_font_sizes/font_size = 58
 text = "GunBlade"
 
-[node name="Subtitle" type="Label" parent="Panel/VBoxContainer"]
+[node name="Subtitle" type="Label" parent="Panel/Content/LeftColumn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.76, 0.8, 0.88, 0.96)
-theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.82, 0.88, 0.82, 0.96)
+theme_override_font_sizes/font_size = 17
 autowrap_mode = 3
-text = "Descend through the ruined fortress, shift between steel and sorcery, and break the warden before the halls consume another run."
+text = "Steel, arrows, and forbidden starfall magic carve a path through a fortress that keeps changing its terms. Pick a prisoner, descend, and watch for impossible doors."
 
-[node name="FeatureCard" type="Panel" parent="Panel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 104)
+[node name="LoreCard" type="Panel" parent="Panel/Content/LeftColumn"]
+custom_minimum_size = Vector2(0, 112)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_info_card")
 
-[node name="FeatureText" type="Label" parent="Panel/VBoxContainer/FeatureCard"]
+[node name="LoreText" type="Label" parent="Panel/Content/LeftColumn/LoreCard"]
 layout_mode = 0
 offset_left = 18.0
 offset_top = 16.0
-offset_right = 492.0
-offset_bottom = 84.0
-theme_override_colors/font_color = Color(0.85, 0.89, 0.96, 0.95)
+offset_right = 532.0
+offset_bottom = 96.0
+theme_override_colors/font_color = Color(0.9, 0.86, 0.76, 0.96)
 theme_override_font_sizes/font_size = 15
 autowrap_mode = 3
-text = "Warrior holds the line. Archer controls space. Monk now channels volatile magic. Choose a careful descent or jump straight into the opening chamber."
+text = "Three routes. One warden. A hidden violet rite waits for players who start differently and fall where the floor should have ended."
 
-[node name="SettingsCard" type="Panel" parent="Panel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 122)
+[node name="ButtonRow" type="HBoxContainer" parent="Panel/Content/LeftColumn"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="NewGame" type="Button" parent="Panel/Content/LeftColumn/ButtonRow"]
+custom_minimum_size = Vector2(174, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.95, 0.88, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
+text = "Choose Hero"
+
+[node name="TestRoom" type="Button" parent="Panel/Content/LeftColumn/ButtonRow"]
+custom_minimum_size = Vector2(174, 58)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.95, 0.88, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
+text = "Quick Start"
+
+[node name="Quit" type="Button" parent="Panel/Content/LeftColumn/ButtonRow"]
+custom_minimum_size = Vector2(130, 58)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.78, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
+text = "Quit"
+
+[node name="Hint" type="Label" parent="Panel/Content/LeftColumn"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.68, 0.63, 0.95)
+theme_override_font_sizes/font_size = 13
+autowrap_mode = 3
+text = "Tip: press C on hero select to open a hidden route. Quick Start launches the opening chamber as Warrior."
+
+[node name="RightColumn" type="VBoxContainer" parent="Panel/Content"]
+custom_minimum_size = Vector2(390, 0)
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="StatusCard" type="Panel" parent="Panel/Content/RightColumn"]
+custom_minimum_size = Vector2(0, 172)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_side_card")
+
+[node name="StatusTitle" type="Label" parent="Panel/Content/RightColumn/StatusCard"]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 16.0
+offset_right = 350.0
+offset_bottom = 40.0
+theme_override_colors/font_color = Color(0.52, 1, 0.82, 0.98)
+theme_override_font_sizes/font_size = 16
+text = "Current Build"
+
+[node name="StatusText" type="Label" parent="Panel/Content/RightColumn/StatusCard"]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 50.0
+offset_right = 350.0
+offset_bottom = 154.0
+theme_override_colors/font_color = Color(0.78, 0.88, 0.82, 0.96)
+theme_override_font_sizes/font_size = 14
+autowrap_mode = 3
+text = "Monk starfall splits on impact. Mana is visible below health. Secret boss route is wired through the violet covenant path."
+
+[node name="SettingsCard" type="Panel" parent="Panel/Content/RightColumn"]
+custom_minimum_size = Vector2(0, 174)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_info_card")
 
-[node name="SettingsTitle" type="Label" parent="Panel/VBoxContainer/SettingsCard"]
+[node name="SettingsTitle" type="Label" parent="Panel/Content/RightColumn/SettingsCard"]
 layout_mode = 0
 offset_left = 18.0
-offset_top = 14.0
-offset_right = 181.0
-offset_bottom = 34.0
-theme_override_colors/font_color = Color(0.95, 0.82, 0.5, 0.95)
-theme_override_font_sizes/font_size = 15
-text = "Display Settings"
+offset_top = 16.0
+offset_right = 180.0
+offset_bottom = 38.0
+theme_override_colors/font_color = Color(1, 0.67, 0.34, 0.98)
+theme_override_font_sizes/font_size = 16
+text = "Display"
 
-[node name="GraphicsRow" type="HBoxContainer" parent="Panel/VBoxContainer/SettingsCard"]
+[node name="GraphicsRow" type="HBoxContainer" parent="Panel/Content/RightColumn/SettingsCard"]
 layout_mode = 0
 offset_left = 18.0
-offset_top = 44.0
-offset_right = 494.0
-offset_bottom = 78.0
-theme_override_constants/separation = 14
+offset_top = 54.0
+offset_right = 350.0
+offset_bottom = 92.0
+theme_override_constants/separation = 12
 
-[node name="GraphicsLabel" type="Label" parent="Panel/VBoxContainer/SettingsCard/GraphicsRow"]
-custom_minimum_size = Vector2(132, 0)
+[node name="GraphicsLabel" type="Label" parent="Panel/Content/RightColumn/SettingsCard/GraphicsRow"]
+custom_minimum_size = Vector2(104, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.84, 0.88, 0.95, 0.96)
+theme_override_colors/font_color = Color(0.88, 0.86, 0.78, 0.96)
 theme_override_font_sizes/font_size = 14
-text = "Graphics Quality"
+text = "Quality"
 
-[node name="GraphicsOption" type="OptionButton" parent="Panel/VBoxContainer/SettingsCard/GraphicsRow"]
-custom_minimum_size = Vector2(180, 36)
+[node name="GraphicsOption" type="OptionButton" parent="Panel/Content/RightColumn/SettingsCard/GraphicsRow"]
+custom_minimum_size = Vector2(154, 36)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
@@ -242,52 +342,19 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
 theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
 
-[node name="FullscreenToggle" type="CheckButton" parent="Panel/VBoxContainer/SettingsCard"]
+[node name="FullscreenToggle" type="CheckButton" parent="Panel/Content/RightColumn/SettingsCard"]
 layout_mode = 0
 offset_left = 18.0
-offset_top = 84.0
-offset_right = 240.0
-offset_bottom = 110.0
-theme_override_colors/font_color = Color(0.84, 0.88, 0.95, 0.96)
+offset_top = 110.0
+offset_right = 246.0
+offset_bottom = 146.0
+theme_override_colors/font_color = Color(0.88, 0.86, 0.78, 0.96)
 theme_override_font_sizes/font_size = 14
 text = "Fullscreen Mode"
 
-[node name="NewGame" type="Button" parent="Panel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 52)
+[node name="Footer" type="Label" parent="Panel/Content/RightColumn"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.94, 0.9, 1)
-theme_override_font_sizes/font_size = 18
-theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
-text = "New Run"
-
-[node name="TestRoom" type="Button" parent="Panel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 52)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.94, 0.9, 1)
-theme_override_font_sizes/font_size = 18
-theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
-text = "Start Chamber"
-
-[node name="Quit" type="Button" parent="Panel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 52)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.96, 0.9, 0.88, 1)
-theme_override_font_sizes/font_size = 18
-theme_override_styles/focus = SubResource("StyleBoxFlat_button_focus")
-theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_button_normal")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
-text = "Quit To Dark"
-
-[node name="Hint" type="Label" parent="Panel/VBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.62, 0.68, 0.77, 0.92)
+theme_override_colors/font_color = Color(0.56, 0.64, 0.58, 0.9)
 theme_override_font_sizes/font_size = 13
 autowrap_mode = 3
-text = "New Run opens character select. Start Chamber skips straight to the opening room for quick combat testing."
+text = "A/D move, Space jump, LMB attack, RMB skill. Settings are saved automatically."

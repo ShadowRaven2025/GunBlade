@@ -2,6 +2,7 @@ extends Node2D
 
 const MAIN_MENU_SCENE = "res://scenes/menus/MainMenu.tscn"
 const TEST_ROOM_SCENE = "res://scenes/game/levels/TestRoom.tscn"
+const SECRET_FLASH_TEXT = "A violet covenant answers."
 const ROOM_ALERT_TEXT = {
 	"res://scenes/game/levels/Dungeon.tscn": "Sweep the broken ascent",
 	"res://scenes/game/levels/IronFoundry.tscn": "Cut through the foundry watch",
@@ -23,9 +24,11 @@ const ROOM_CLEAR_TEXT = {
 @onready var state_label: Label = $CanvasLayer/HUD/VBox/StatePanel/StateLabel
 @onready var hint_label: Label = $CanvasLayer/HUD/VBox/Hint
 @onready var exit_area = get_node_or_null("ExitArea")
+@onready var secret_flash_label: Label = get_node_or_null("CanvasLayer/SecretFlash")
 
 var player_in_exit_area: bool = false
 var room_reward_granted: bool = false
+var secret_triggered: bool = false
 
 func _ready():
 	_apply_selected_character()
@@ -34,6 +37,8 @@ func _ready():
 	if exit_area != null:
 		exit_area.body_entered.connect(_on_exit_area_body_entered)
 		exit_area.body_exited.connect(_on_exit_area_body_exited)
+	if secret_flash_label != null:
+		secret_flash_label.visible = false
 	_update_hud()
 
 func register_enemy(enemy):
@@ -82,6 +87,7 @@ func _apply_selected_character():
 		config.get("attack_type", "melee"),
 		bool(config.get("double_jump", false))
 	)
+	player.modulate = config.get("modulate", Color(1, 1, 1, 1))
 	player.current_mana = player.max_mana
 	player._update_mana_bar()
 	player._update_health_bar()
@@ -103,6 +109,8 @@ func _process(_delta):
 	if player_in_exit_area and _can_use_exit() and Input.is_action_just_pressed("interact"):
 		_use_exit()
 		return
+
+	_check_secret_fall()
 	
 	_update_hud()
 
@@ -198,6 +206,37 @@ func _use_exit():
 		return
 	Game.next_floor()
 	get_tree().change_scene_to_file(Game.get_floor_scene_path())
+
+func _check_secret_fall():
+	if secret_triggered or player == null or not is_instance_valid(player):
+		return
+	if _get_alive_enemy_count() > 0:
+		return
+	if player.global_position.y < 700.0:
+		return
+	if Game.is_secret_route_active() and scene_file_path == Game.get_floor_scene_path(1) and Game.get_secret_step() == 0 and player.global_position.x < 260.0:
+		secret_triggered = true
+		Game.set_secret_step(1)
+		await _show_secret_flash()
+		Game.next_floor()
+		get_tree().change_scene_to_file(Game.get_floor_scene_path())
+		return
+	if Game.is_secret_route_active() and scene_file_path == Game.get_floor_scene_path(3) and Game.get_secret_step() == 1 and player.global_position.x > 1020.0:
+		secret_triggered = true
+		Game.set_secret_step(2)
+		get_tree().change_scene_to_file(Game.SECRET_BOSS_SCENE)
+		return
+	secret_triggered = true
+	player.take_damage(player.current_health)
+
+func _show_secret_flash():
+	if secret_flash_label == null:
+		return
+	secret_flash_label.text = SECRET_FLASH_TEXT
+	secret_flash_label.visible = true
+	await get_tree().create_timer(0.1).timeout
+	if secret_flash_label != null:
+		secret_flash_label.visible = false
 
 func _on_exit_area_body_entered(body: Node):
 	if body == player:
