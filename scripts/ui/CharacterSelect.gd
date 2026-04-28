@@ -2,28 +2,45 @@ extends Control
 
 const TEST_ROOM_SCENE = "res://scenes/game/levels/TestRoom.tscn"
 
+var highlighted_character: String = "warrior"
+
 func _ready():
 	$Panel/VBox/Header/BackButton.pressed.connect(_on_back_pressed)
 	$Panel/VBox/Cards/WarriorButton.pressed.connect(_on_warrior_pressed)
 	$Panel/VBox/Cards/ArcherButton.pressed.connect(_on_archer_pressed)
 	$Panel/VBox/Cards/MonkButton.pressed.connect(_on_monk_pressed)
+	$Panel/VBox/Cards/WarriorButton.mouse_entered.connect(_on_warrior_highlighted)
+	$Panel/VBox/Cards/ArcherButton.mouse_entered.connect(_on_archer_highlighted)
+	$Panel/VBox/Cards/MonkButton.mouse_entered.connect(_on_monk_highlighted)
+	$Panel/VBox/Cards/WarriorButton.focus_entered.connect(_on_warrior_highlighted)
+	$Panel/VBox/Cards/ArcherButton.focus_entered.connect(_on_archer_highlighted)
+	$Panel/VBox/Cards/MonkButton.focus_entered.connect(_on_monk_highlighted)
 	_update_unlocks()
 
 func _input(event: InputEvent):
 	if event.is_action_pressed("secret_start"):
-		var character_id := Game.selected_character
-		if not Game.CHARACTER_CONFIGS.has(character_id):
-			character_id = "warrior"
-		_start_run(character_id, true)
+		_start_run(highlighted_character, true)
 
 func _on_warrior_pressed():
+	highlighted_character = "warrior"
 	_start_run("warrior")
 
 func _on_archer_pressed():
+	highlighted_character = "archer"
 	_start_run("archer")
 
 func _on_monk_pressed():
+	highlighted_character = "monk"
 	_start_run("monk")
+
+func _on_warrior_highlighted():
+	highlighted_character = "warrior"
+
+func _on_archer_highlighted():
+	highlighted_character = "archer"
+
+func _on_monk_highlighted():
+	highlighted_character = "monk"
 
 func _start_run(character_id: String, secret_route: bool = false):
 	Game.set_selected_character(character_id)
