@@ -69,7 +69,7 @@ func explode():
 	collision_shape.set_deferred("disabled", true)
 	_damage_nearby_enemies()
 	if can_split:
-		_call_deferred("_spawn_split_stars")
+		call_deferred("_spawn_split_stars")
 	call_deferred("queue_free")
 
 func _damage_nearby_enemies():
