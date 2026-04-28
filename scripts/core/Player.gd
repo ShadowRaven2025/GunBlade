@@ -37,6 +37,7 @@ const SKY_STAR_SCENE = preload("res://scenes/game/projectiles/SkyStar.tscn")
 @export var starfall_base_count: int = 2
 @export var starfall_extra_count: int = 3
 @export var starfall_spawn_spread: float = 120.0
+@export var starfall_tick_interval: float = 0.28
 
 var current_health: int
 var can_attack: bool = true
@@ -66,6 +67,7 @@ var magic_shot_time_left: float = 0.0
 var is_channeling_magic: bool = false
 var is_charging_starfall: bool = false
 var starfall_charge_time: float = 0.0
+var starfall_tick_time_left: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var health_bar: ProgressBar = $HealthBar
@@ -198,7 +200,18 @@ func _update_starfall_charge(delta):
 	var max_charge_for_mana := _get_max_starfall_charge_from_mana()
 	var charge_cap: float = minf(starfall_max_charge_time, max_charge_for_mana)
 	starfall_charge_time = min(starfall_charge_time + delta, charge_cap)
+	starfall_tick_time_left = max(starfall_tick_time_left - delta, 0.0)
 	is_channeling_magic = true
+	if starfall_tick_time_left == 0.0:
+		var charge_ratio := _get_starfall_charge_ratio()
+		var mana_cost := _get_starfall_mana_cost(charge_ratio)
+		if current_mana >= mana_cost:
+			current_mana -= mana_cost
+			_cast_starfall(charge_ratio)
+			starfall_tick_time_left = starfall_tick_interval
+		elif current_mana < starfall_min_mana_cost:
+			_release_starfall_charge()
+			return
 	_update_mana_bar()
 
 func _begin_starfall_charge():
@@ -207,6 +220,7 @@ func _begin_starfall_charge():
 	is_charging_starfall = true
 	is_channeling_magic = true
 	starfall_charge_time = 0.0
+	starfall_tick_time_left = 0.12
 	can_attack = false
 	anim_timer = 0.0
 	current_frame = 0
@@ -217,12 +231,8 @@ func _release_starfall_charge():
 		return
 	is_charging_starfall = false
 	is_channeling_magic = false
-	var normalized_charge := _get_starfall_charge_ratio()
-	var mana_cost := _get_starfall_mana_cost(normalized_charge)
-	var can_cast := current_mana >= mana_cost
-	if can_cast:
-		current_mana -= mana_cost
-		_cast_starfall(normalized_charge)
+	starfall_tick_time_left = 0.0
+	starfall_charge_time = 0.0
 	current_frame = 0
 	can_attack = true
 	_update_mana_bar()

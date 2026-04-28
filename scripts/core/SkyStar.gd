@@ -64,10 +64,13 @@ func explode():
 	if has_exploded:
 		return
 	has_exploded = true
+	monitoring = false
+	monitorable = false
+	collision_shape.set_deferred("disabled", true)
 	_damage_nearby_enemies()
 	if can_split:
-		_spawn_split_stars()
-	queue_free()
+		_call_deferred("_spawn_split_stars")
+	call_deferred("queue_free")
 
 func _damage_nearby_enemies():
 	if get_parent() == null:
