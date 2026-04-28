@@ -3,6 +3,9 @@ extends Node2D
 const MAIN_MENU_SCENE = "res://scenes/menus/MainMenu.tscn"
 const TEST_ROOM_SCENE = "res://scenes/game/levels/TestRoom.tscn"
 const SECRET_FLASH_TEXT = "A violet covenant answers."
+const PIT_DEATH_Y := 700.0
+const LEFT_PIT_MAX_X := 260.0
+const RIGHT_PIT_MIN_X := 1020.0
 const ROOM_ALERT_TEXT = {
 	"res://scenes/game/levels/Dungeon.tscn": "Sweep the broken ascent",
 	"res://scenes/game/levels/IronFoundry.tscn": "Cut through the foundry watch",
@@ -110,7 +113,7 @@ func _process(_delta):
 		_use_exit()
 		return
 
-	_check_secret_fall()
+	_check_pit_fall()
 	
 	_update_hud()
 
@@ -121,12 +124,12 @@ func _update_hud():
 	floor_value_label.text = "T%s" % Game.current_floor if is_test_room else "%02d" % Game.current_floor
 	enemies_value_label.text = str(enemies_left)
 	gold_value_label.text = str(Game.gold)
-	hint_label.text = _get_hint_text(is_test_room, is_boss_room, enemies_left)
 	if player == null or not is_instance_valid(player):
 		state_label.text = "Run failed"
 		room_status_label.text = "The prison took you. Press Esc to retreat."
 		hint_label.text = "Esc retreat to menu"
 		return
+	hint_label.text = _get_hint_text(is_test_room, is_boss_room, enemies_left)
 	
 	if is_test_room:
 		if enemies_left > 0:
@@ -207,26 +210,55 @@ func _use_exit():
 	Game.next_floor()
 	get_tree().change_scene_to_file(Game.get_floor_scene_path())
 
-func _check_secret_fall():
+func _check_pit_fall():
 	if secret_triggered or player == null or not is_instance_valid(player):
 		return
-	if _get_alive_enemy_count() > 0:
-		return
-	if player.global_position.y < 700.0:
-		return
-	if Game.is_secret_route_active() and scene_file_path == Game.get_floor_scene_path(1) and Game.get_secret_step() == 0 and player.global_position.x < 260.0:
-		secret_triggered = true
-		Game.set_secret_step(1)
-		await _show_secret_flash()
-		Game.next_floor()
-		get_tree().change_scene_to_file(Game.get_floor_scene_path())
-		return
-	if Game.is_secret_route_active() and scene_file_path == Game.get_floor_scene_path(3) and Game.get_secret_step() == 1 and player.global_position.x > 1020.0:
-		secret_triggered = true
-		Game.set_secret_step(2)
-		get_tree().change_scene_to_file(Game.SECRET_BOSS_SCENE)
+	if player.global_position.y < PIT_DEATH_Y:
 		return
 	secret_triggered = true
+	if _is_left_pit_fall():
+		_handle_left_pit_fall()
+		return
+	if _is_right_pit_fall():
+		_handle_right_pit_fall()
+		return
+	_kill_player_in_pit()
+
+func _is_left_pit_fall() -> bool:
+	return player.global_position.x < LEFT_PIT_MAX_X
+
+func _is_right_pit_fall() -> bool:
+	return player.global_position.x > RIGHT_PIT_MIN_X
+
+func _handle_left_pit_fall():
+	if _can_use_first_secret_pit():
+		_go_to_next_floor_from_secret_pit()
+		return
+	_kill_player_in_pit()
+
+func _handle_right_pit_fall():
+	if _can_use_boss_secret_pit():
+		_go_to_secret_boss_from_pit()
+		return
+	_kill_player_in_pit()
+
+func _can_use_first_secret_pit() -> bool:
+	return Game.is_secret_route_active() and _get_alive_enemy_count() == 0 and scene_file_path == Game.get_floor_scene_path(1) and Game.get_secret_step() == 0
+
+func _can_use_boss_secret_pit() -> bool:
+	return Game.is_secret_route_active() and _get_alive_enemy_count() == 0 and scene_file_path == Game.get_floor_scene_path(3) and Game.get_secret_step() == 1
+
+func _go_to_next_floor_from_secret_pit():
+	Game.set_secret_step(1)
+	await _show_secret_flash()
+	Game.next_floor()
+	get_tree().change_scene_to_file(Game.get_floor_scene_path())
+
+func _go_to_secret_boss_from_pit():
+	Game.set_secret_step(2)
+	get_tree().change_scene_to_file(Game.SECRET_BOSS_SCENE)
+
+func _kill_player_in_pit():
 	player.take_damage(player.current_health)
 
 func _show_secret_flash():
