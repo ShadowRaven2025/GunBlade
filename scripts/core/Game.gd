@@ -111,8 +111,8 @@ const CHARACTER_CONFIGS := {
 		"starfall_max_mana_cost": 44.0,
 		"starfall_base_damage": 14,
 		"starfall_extra_damage": 18,
-		"starfall_base_count": 2,
-		"starfall_extra_count": 3
+		"starfall_base_count": 5,
+		"starfall_extra_count": 7
 	}
 }
 

@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/SkyStar.gd" id="1_sky_star"]
-[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/UI Elements/UI Elements/Icons/Icon_12.png" id="2_star_texture"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_star"]
 radius = 10.0
@@ -11,11 +10,10 @@ script = ExtResource("1_sky_star")
 collision_layer = 0
 collision_mask = 11
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-texture = ExtResource("2_star_texture")
-modulate = Color(1, 0.93, 0.52, 1)
-offset = Vector2(0, -2)
-scale = Vector2(0.2, 0.2)
+[node name="Visual" type="Polygon2D" parent="."]
+color = Color(1, 0.9, 0.4, 1)
+polygon = PackedVector2Array(0, -38, 9, -12, 36, -12, 15, 5, 22, 31, 0, 16, -22, 31, -15, 5, -36, -12, -9, -12)
+scale = Vector2(0.22, 0.22)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_star")

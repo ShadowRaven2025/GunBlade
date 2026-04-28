@@ -17,8 +17,9 @@ var star_scale: float = 1.0
 var lifetime_left: float = 0.0
 var has_exploded: bool = false
 var direct_hit_enemy: Enemy = null
+var uses_gravity: bool = true
 
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var visual: Node2D = $Visual
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 func setup(config: Dictionary):
@@ -34,6 +35,7 @@ func setup(config: Dictionary):
 	star_scale = float(config.get("scale", star_scale))
 	splash_radius = float(config.get("splash_radius", splash_radius))
 	max_lifetime = float(config.get("max_lifetime", max_lifetime))
+	uses_gravity = bool(config.get("uses_gravity", uses_gravity))
 	lifetime_left = max_lifetime
 	_apply_visual_scale()
 
@@ -43,7 +45,8 @@ func _ready():
 		lifetime_left = max_lifetime
 
 func _physics_process(delta: float):
-	velocity.y += fall_gravity * delta
+	if uses_gravity:
+		velocity.y += fall_gravity * delta
 	var movement := velocity * delta
 	global_position += movement
 	rotation += delta * 4.8 * direction
@@ -105,13 +108,14 @@ func _spawn_split_stars():
 			"split_count": 0,
 			"split_damage": 0,
 			"split_speed": split_speed * 0.55,
-			"scale": max(star_scale * 0.55, 0.4),
-			"splash_radius": max(splash_radius * 0.52, 18.0),
-			"max_lifetime": 0.9
+			"scale": maxf(star_scale * 0.55, 0.4),
+			"splash_radius": maxf(splash_radius * 0.52, 18.0),
+			"max_lifetime": 0.9,
+			"uses_gravity": false
 		})
 
 func _apply_visual_scale():
-	if sprite != null:
-		sprite.scale = Vector2.ONE * star_scale
+	if visual != null:
+		visual.scale = Vector2.ONE * star_scale
 	if collision_shape != null:
-		collision_shape.scale = Vector2.ONE * max(star_scale, 0.6)
+		collision_shape.scale = Vector2.ONE * maxf(star_scale, 0.6)

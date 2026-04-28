@@ -34,10 +34,10 @@ const SKY_STAR_SCENE = preload("res://scenes/game/projectiles/SkyStar.tscn")
 @export var starfall_max_mana_cost: float = 42.0
 @export var starfall_base_damage: int = 14
 @export var starfall_extra_damage: int = 16
-@export var starfall_base_count: int = 2
-@export var starfall_extra_count: int = 3
-@export var starfall_spawn_spread: float = 120.0
-@export var starfall_tick_interval: float = 0.28
+@export var starfall_base_count: int = 5
+@export var starfall_extra_count: int = 7
+@export var starfall_spawn_spread: float = 520.0
+@export var starfall_tick_interval: float = 0.18
 
 var current_health: int
 var can_attack: bool = true
@@ -260,14 +260,16 @@ func _cast_starfall(charge_ratio: float):
 	var split_count := 3 + int(round(2.0 * charge_ratio))
 	var scale_value := lerpf(0.9, 1.8, charge_ratio)
 	var splash_radius := lerpf(34.0, 68.0, charge_ratio)
-	var mouse_world := get_global_mouse_position()
+	var viewport_width: float = get_viewport_rect().size.x
+	var spread_width: float = maxf(starfall_spawn_spread, viewport_width * 0.7)
+	var center_x: float = global_position.x
 	for index in range(max(star_count, 1)):
 		var star = SKY_STAR_SCENE.instantiate()
 		get_parent().add_child(star)
 		var offset_ratio := 0.5 if star_count <= 1 else float(index) / float(star_count - 1)
-		var horizontal_offset := lerpf(-starfall_spawn_spread, starfall_spawn_spread, offset_ratio)
-		horizontal_offset += randf_range(-22.0, 22.0)
-		star.global_position = Vector2(mouse_world.x + horizontal_offset, global_position.y - 340.0 - randf_range(40.0, 160.0))
+		var horizontal_offset := lerpf(-spread_width, spread_width, offset_ratio)
+		horizontal_offset += randf_range(-48.0, 48.0)
+		star.global_position = Vector2(center_x + horizontal_offset, global_position.y - 380.0 - randf_range(60.0, 220.0))
 		star.setup({
 			"direction": facing_direction,
 			"velocity": Vector2(randf_range(-48.0, 48.0), lerpf(340.0, 520.0, charge_ratio)),
@@ -278,7 +280,8 @@ func _cast_starfall(charge_ratio: float):
 			"split_speed": lerpf(180.0, 300.0, charge_ratio),
 			"scale": scale_value,
 			"splash_radius": splash_radius,
-			"max_lifetime": 1.9
+			"max_lifetime": 1.9,
+			"uses_gravity": true
 		})
 
 func _regen_mana(delta):
