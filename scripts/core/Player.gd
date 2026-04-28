@@ -196,7 +196,7 @@ func _update_starfall_charge(delta):
 		_release_starfall_charge()
 		return
 	var max_charge_for_mana := _get_max_starfall_charge_from_mana()
-	var charge_cap := min(starfall_max_charge_time, max_charge_for_mana)
+	var charge_cap: float = minf(starfall_max_charge_time, max_charge_for_mana)
 	starfall_charge_time = min(starfall_charge_time + delta, charge_cap)
 	is_channeling_magic = true
 	_update_mana_bar()

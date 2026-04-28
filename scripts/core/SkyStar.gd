@@ -2,7 +2,7 @@ extends Area2D
 
 const SKY_STAR_SCENE = preload("res://scenes/game/projectiles/SkyStar.tscn")
 
-@export var gravity: float = 980.0
+@export var fall_gravity: float = 980.0
 @export var max_lifetime: float = 2.2
 @export var splash_radius: float = 42.0
 
@@ -43,7 +43,7 @@ func _ready():
 		lifetime_left = max_lifetime
 
 func _physics_process(delta: float):
-	velocity.y += gravity * delta
+	velocity.y += fall_gravity * delta
 	var movement := velocity * delta
 	global_position += movement
 	rotation += delta * 4.8 * direction
