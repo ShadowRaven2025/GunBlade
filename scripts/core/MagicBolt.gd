@@ -32,7 +32,7 @@ func _physics_process(delta):
 		queue_free()
 
 func _on_body_entered(body):
-	if body is Enemy:
+	if body.is_in_group("enemies") and body.has_method("take_damage"):
 		body.take_damage(damage)
 		queue_free()
 		return

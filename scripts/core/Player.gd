@@ -392,10 +392,10 @@ func _perform_attack_hit():
 
 func _damage_enemies_in_attack():
 	var attack_center = global_position + Vector2(attack_range * facing_direction, -10.0)
-	for node in get_parent().get_children():
-		if not (node is Enemy):
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if not node.has_method("take_damage"):
 			continue
-		var enemy := node as Enemy
+		var enemy: Node2D = node as Node2D
 		if not is_instance_valid(enemy):
 			continue
 		var to_enemy = enemy.global_position - global_position
@@ -406,10 +406,10 @@ func _damage_enemies_in_attack():
 
 func _kick_enemies_in_attack():
 	var attack_center = global_position + Vector2(kick_range * facing_direction, -6.0)
-	for node in get_parent().get_children():
-		if not (node is Enemy):
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if not node.has_method("take_damage"):
 			continue
-		var enemy := node as Enemy
+		var enemy: Node2D = node as Node2D
 		if not is_instance_valid(enemy):
 			continue
 		var to_enemy = enemy.global_position - global_position
@@ -417,7 +417,8 @@ func _kick_enemies_in_attack():
 		var is_in_range = enemy.global_position.distance_to(attack_center) <= kick_hit_radius
 		if is_in_front and is_in_range:
 			enemy.take_damage(kick_damage)
-			enemy.apply_knockback(Vector2(kick_knockback_force * facing_direction, -120.0))
+			if enemy.has_method("apply_knockback"):
+				enemy.apply_knockback(Vector2(kick_knockback_force * facing_direction, -120.0))
 
 func _fire_arrow(flat_flight: bool = false):
 	var arrow = ARROW_SCENE.instantiate()

@@ -46,7 +46,7 @@ func _update_flight_rotation():
 		rotation += PI
 
 func _on_body_entered(body: Node):
-	if body is Enemy:
+	if body.is_in_group("enemies") and body.has_method("take_damage"):
 		body.take_damage(damage)
 		queue_free()
 		return

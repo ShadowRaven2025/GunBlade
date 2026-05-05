@@ -17,7 +17,7 @@ var direct_hit_damage_multiplier: float = 1.0
 var star_scale: float = 1.0
 var lifetime_left: float = 0.0
 var has_exploded: bool = false
-var direct_hit_enemy: Enemy = null
+var direct_hit_enemy: Node2D = null
 var uses_gravity: bool = true
 var exploded_on_ground: bool = false
 
@@ -61,8 +61,8 @@ func _physics_process(delta: float):
 		explode()
 
 func _on_body_entered(body: Node):
-	if body is Enemy:
-		direct_hit_enemy = body
+	if body.is_in_group("enemies") and body.has_method("take_damage"):
+		direct_hit_enemy = body as Node2D
 		body.take_damage(maxi(1, int(round(damage * direct_hit_damage_multiplier))))
 		explode()
 		return
@@ -85,10 +85,10 @@ func explode():
 func _damage_nearby_enemies():
 	if get_parent() == null:
 		return
-	for node in get_parent().get_children():
-		if not (node is Enemy):
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if not node.has_method("take_damage"):
 			continue
-		var enemy := node as Enemy
+		var enemy: Node2D = node as Node2D
 		if not is_instance_valid(enemy):
 			continue
 		if enemy == direct_hit_enemy:
