@@ -6,7 +6,7 @@ signal died
 const CARD_SCENE = preload("res://scenes/game/projectiles/SecretCard.tscn")
 const SCYTHE_SCENE = preload("res://scenes/game/projectiles/SecretScythe.tscn")
 
-@export var max_health: int = 320
+@export var max_health: int = 520
 @export var gravity: float = 980.0
 @export var max_fatigue: float = 100.0
 @export var fatigue_from_hit: float = 9.0
@@ -15,7 +15,8 @@ const SCYTHE_SCENE = preload("res://scenes/game/projectiles/SecretScythe.tscn")
 @export var teleport_min_x: float = 160.0
 @export var teleport_max_x: float = 1120.0
 @export var teleport_ground_y: float = 598.0
-@export var teleport_min_distance: float = 220.0
+@export var teleport_min_distance: float = 72.0
+@export var teleport_iframe_duration: float = 0.45
 @export var phase_transition_iframe_duration: float = 1.35
 @export var final_phase_iframe_duration: float = 1.0
 @export var field_attack_min_x: float = 170.0
@@ -119,19 +120,18 @@ func _teleport_away():
 	var destination: Vector2 = _get_teleport_destination()
 	global_position = destination
 	velocity = Vector2.ZERO
-	attack_timer = maxf(attack_timer, 0.25)
+	attack_timer = maxf(attack_timer, 0.4)
+	_start_iframes(teleport_iframe_duration)
 	sprite.modulate = Color(0.95, 0.55, 1.0, 0.78)
 	call_deferred("_update_phase_visual")
 
 func _get_teleport_destination() -> Vector2:
-	var destination_x: float = randf_range(teleport_min_x, teleport_max_x)
+	var destination_x: float = clampf(global_position.x + randf_range(-teleport_min_distance, teleport_min_distance), teleport_min_x, teleport_max_x)
 	if is_instance_valid(target):
 		var away_direction: float = sign(global_position.x - target.global_position.x)
 		if away_direction == 0.0:
 			away_direction = -1.0 if target.global_position.x > (teleport_min_x + teleport_max_x) * 0.5 else 1.0
-		destination_x = clampf(target.global_position.x + away_direction * teleport_min_distance, teleport_min_x, teleport_max_x)
-		if absf(destination_x - global_position.x) < 80.0:
-			destination_x = teleport_max_x if destination_x < (teleport_min_x + teleport_max_x) * 0.5 else teleport_min_x
+		destination_x = clampf(global_position.x + away_direction * teleport_min_distance, teleport_min_x, teleport_max_x)
 	return Vector2(destination_x, teleport_ground_y)
 
 func _update_phase_visual():
