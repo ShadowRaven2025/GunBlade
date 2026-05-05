@@ -20,6 +20,8 @@ func _ready():
 func _input(event: InputEvent):
 	if event.is_action_pressed("secret_start"):
 		_start_run(highlighted_character, true)
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_G:
+		_try_start_secret_boss()
 
 func _on_warrior_pressed():
 	highlighted_character = "warrior"
@@ -47,9 +49,16 @@ func _start_run(character_id: String, secret_route: bool = false):
 	Game.new_game(secret_route)
 	get_tree().change_scene_to_file(TEST_ROOM_SCENE)
 
+func _try_start_secret_boss():
+	if highlighted_character != "monk":
+		return
+	if not Game.is_secret_priest_unlocked():
+		return
+	_start_run("secret_boss")
+
 func _update_unlocks():
 	if Game.is_secret_priest_unlocked():
-		$Panel/VBox/Cards/MonkButton.text = "Monk\nSecret priest skin unlocked\nC starts hidden route"
+		$Panel/VBox/Cards/MonkButton.text = "Monk\nSecret priest skin unlocked\nG play as secret boss"
 	else:
 		$Panel/VBox/Cards/MonkButton.text = "Monk\nBalanced mobility\nPress C for hidden route"
 

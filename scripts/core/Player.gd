@@ -112,6 +112,7 @@ func set_character_visuals(idle_path: String, run_path: String, attack_path: Str
 	sprite.frame = 0
 	current_frame_count = idle_frame_count
 	current_animation = "idle"
+	sprite.scale = Game.get_selected_character_config().get("visual_scale", Vector2.ONE)
 	current_mana = max_mana
 	_reset_jump_state()
 	_update_mana_bar()

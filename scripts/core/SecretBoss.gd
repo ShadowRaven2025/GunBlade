@@ -18,6 +18,10 @@ const SCYTHE_SCENE = preload("res://scenes/game/projectiles/SecretScythe.tscn")
 @export var teleport_min_distance: float = 220.0
 @export var phase_transition_iframe_duration: float = 1.35
 @export var final_phase_iframe_duration: float = 1.0
+@export var field_attack_min_x: float = 170.0
+@export var field_attack_max_x: float = 1110.0
+@export var field_attack_min_y: float = 165.0
+@export var field_attack_max_y: float = 430.0
 
 var current_health: int = 0
 var attack_timer: float = 1.7
@@ -28,6 +32,7 @@ var defeated_started: bool = false
 var fatigue: float = 0.0
 var is_vulnerable: bool = false
 var iframe_time_left: float = 0.0
+var attack_pattern_index: int = 0
 var target: Player = null
 
 @onready var sprite: Sprite2D = $Sprite2D
@@ -153,25 +158,72 @@ func _update_iframes(delta: float):
 			_update_phase_visual()
 
 func _cast_normal_pattern():
-	_spawn_card_fan()
-	if phase_two:
-		_spawn_scythe_arc()
+	var pattern_count: int = 3 if phase_two else 2
+	var pattern: int = attack_pattern_index % pattern_count
+	attack_pattern_index += 1
+	match pattern:
+		0:
+			_spawn_suit_fan()
+		1:
+			_spawn_suit_rain()
+		2:
+			_spawn_scythe_arc()
+			_spawn_suit_crossfire()
 
-func _spawn_card_fan():
+func _spawn_suit_fan():
 	var parent: Node = get_parent()
 	if parent == null:
 		return
-	var base_direction: Vector2 = Vector2.LEFT
-	if is_instance_valid(target):
-		base_direction = (target.global_position - global_position).normalized()
 	for index in range(3):
 		var card = CARD_SCENE.instantiate()
 		parent.add_child(card)
-		card.global_position = global_position + Vector2(0, -18)
+		card.global_position = _get_field_card_spawn_position(index)
+		var base_direction: Vector2 = Vector2.DOWN
+		if is_instance_valid(target):
+			base_direction = (target.global_position - card.global_position).normalized()
 		var angle_offset: float = deg_to_rad(-24.0 + index * 24.0)
 		var direction: Vector2 = base_direction.rotated(angle_offset).normalized()
 		var homing: float = 0.65 if index == 1 else 0.0
 		card.setup(direction * 215.0, 7 if not phase_two else 9, homing)
+
+func _spawn_suit_rain():
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var suit_count: int = 4 if phase_two else 3
+	for index in range(suit_count):
+		var suit = CARD_SCENE.instantiate()
+		parent.add_child(suit)
+		var x: float = lerpf(field_attack_min_x, field_attack_max_x, float(index + 1) / float(suit_count + 1))
+		if is_instance_valid(target):
+			var center_offset: float = float(index) - (float(suit_count - 1) * 0.5)
+			x = clampf(target.global_position.x + center_offset * 145.0 + randf_range(-45.0, 45.0), field_attack_min_x, field_attack_max_x)
+		suit.global_position = Vector2(x, field_attack_min_y - 55.0)
+		var drift: float = randf_range(-45.0, 45.0)
+		suit.setup(Vector2(drift, 245.0 if phase_two else 215.0), 7 if not phase_two else 9, 0.0)
+
+func _spawn_suit_crossfire():
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var center_y: float = 250.0
+	if is_instance_valid(target):
+		center_y = clampf(target.global_position.y - 20.0, field_attack_min_y, field_attack_max_y)
+	for side in [-1, 1]:
+		for index in range(2):
+			var suit = CARD_SCENE.instantiate()
+			parent.add_child(suit)
+			var spawn_x: float = field_attack_min_x if side > 0 else field_attack_max_x
+			suit.global_position = Vector2(spawn_x, center_y + float(index * 54 - 27))
+			var direction: Vector2 = Vector2(float(side), randf_range(-0.16, 0.16)).normalized()
+			suit.setup(direction * 235.0, 9, 0.25)
+
+func _get_field_card_spawn_position(index: int) -> Vector2:
+	var x: float = lerpf(field_attack_min_x, field_attack_max_x, float(index + 1) / 4.0)
+	var y: float = randf_range(field_attack_min_y, field_attack_max_y)
+	if is_instance_valid(target):
+		x = clampf(target.global_position.x + float(index - 1) * 190.0 + randf_range(-55.0, 55.0), field_attack_min_x, field_attack_max_x)
+	return Vector2(x, y)
 
 func _spawn_scythe_arc():
 	var parent: Node = get_parent()
@@ -222,7 +274,7 @@ func _spawn_falling_scythe_pattern():
 		parent.add_child(scythe)
 		var x: float = 180.0 + fmod(float(wave * 137 + index * 260), 920.0)
 		scythe.global_position = Vector2(x, -40.0 - index * 36.0)
-		scythe.setup(Vector2(0.0, 285.0), 14)
+		scythe.setup_final_fall(Vector2(0.0, 285.0), 14)
 
 func _end_secret_fight():
 	if defeated_started:
