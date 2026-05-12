@@ -1,6 +1,7 @@
 extends Node2D
 
 const MAIN_MENU_SCENE = "res://scenes/menus/MainMenu.tscn"
+const GAME_OVER_SCENE = "res://scenes/menus/GameOver.tscn"
 const TEST_ROOM_SCENE = "res://scenes/game/levels/TestRoom.tscn"
 const SECRET_FLASH_TEXT = "A violet covenant answers."
 const PIT_DEATH_Y := 700.0
@@ -26,10 +27,16 @@ const ROOM_CLEAR_TEXT = {
 @onready var hint_label: Label = $CanvasLayer/HUD/VBox/Hint
 @onready var exit_area = get_node_or_null("ExitArea")
 @onready var secret_flash_label: Label = get_node_or_null("CanvasLayer/SecretFlash")
+@onready var darkness_switch: Area2D = get_node_or_null("DarknessSwitch")
+@onready var darkness_door: Area2D = get_node_or_null("DarknessDoor")
 
 var player_in_exit_area: bool = false
 var room_reward_granted: bool = false
 var secret_triggered: bool = false
+var changing_scene: bool = false
+var player_in_darkness_switch: bool = false
+var player_in_darkness_door: bool = false
+var darkness_door_open: bool = false
 
 func _ready():
 	_apply_selected_character()
@@ -38,6 +45,7 @@ func _ready():
 	if exit_area != null:
 		exit_area.body_entered.connect(_on_exit_area_body_entered)
 		exit_area.body_exited.connect(_on_exit_area_body_exited)
+	_setup_darkness_gate()
 	if secret_flash_label != null:
 		secret_flash_label.visible = false
 	_update_hud()
@@ -62,6 +70,18 @@ func _apply_selected_character():
 	player.attack_damage += relic_modifiers.get("bonus_damage", 0)
 	player.attack_range = config.get("attack_range", player.attack_range)
 	player.attack_range += relic_modifiers.get("bonus_attack_range", 0.0)
+	player.attack_cooldown = config.get("attack_cooldown", 0.42) * relic_modifiers.get("attack_cooldown_multiplier", 1.0)
+	player.attack_anim_speed = config.get("attack_anim_speed", player.attack_anim_speed)
+	player.kick_attack_type = config.get("kick_attack_type", "melee")
+	player.kick_damage = config.get("kick_damage", player.kick_damage)
+	player.kick_range = config.get("kick_range", player.kick_range)
+	player.kick_hit_radius = config.get("kick_hit_radius", player.kick_hit_radius)
+	player.kick_cooldown = config.get("kick_cooldown", 0.52) * relic_modifiers.get("kick_cooldown_multiplier", 1.0)
+	player.kick_hit_frame = config.get("kick_hit_frame", player.kick_hit_frame)
+	player.parry_duration = config.get("parry_duration", player.parry_duration)
+	player.special_ability = config.get("special_ability", "")
+	player.special_heal_amount = config.get("special_heal_amount", player.special_heal_amount)
+	player.special_cooldown = config.get("special_cooldown", player.special_cooldown)
 	player.max_mana = config.get("max_mana", player.max_mana)
 	player.magic_mana_drain_per_second = config.get("magic_mana_drain_per_second", player.magic_mana_drain_per_second)
 	player.magic_mana_regen_per_second = config.get("magic_mana_regen_per_second", player.magic_mana_regen_per_second)
@@ -73,9 +93,7 @@ func _apply_selected_character():
 	player.starfall_extra_damage = config.get("starfall_extra_damage", player.starfall_extra_damage)
 	player.starfall_base_count = config.get("starfall_base_count", player.starfall_base_count)
 	player.starfall_extra_count = config.get("starfall_extra_count", player.starfall_extra_count)
-	player.kick_knockback_force = 340.0 + relic_modifiers.get("bonus_kick_force", 0.0)
-	player.attack_cooldown = 0.42 * relic_modifiers.get("attack_cooldown_multiplier", 1.0)
-	player.kick_cooldown = 0.52 * relic_modifiers.get("kick_cooldown_multiplier", 1.0)
+	player.kick_knockback_force = config.get("kick_knockback_force", 340.0) + relic_modifiers.get("bonus_kick_force", 0.0)
 	player.set_character_visuals(
 		config.get("idle", ""),
 		config.get("run", ""),
@@ -99,17 +117,32 @@ func _on_enemy_died():
 	_update_hud()
 
 func _on_player_died():
+	if changing_scene:
+		return
+	changing_scene = true
 	state_label.text = "Run failed"
 	room_status_label.text = "The prison took you. Press Esc to retreat."
+	get_tree().change_scene_to_file(GAME_OVER_SCENE)
 
 func _process(_delta):
+	if changing_scene or get_tree() == null:
+		return
 	if Input.is_action_just_pressed("ui_cancel"):
+		changing_scene = true
 		get_tree().change_scene_to_file(MAIN_MENU_SCENE)
 		return
 
 	if player_in_exit_area and _can_use_exit() and Input.is_action_just_pressed("interact"):
 		_use_exit()
 		return
+	if scene_file_path == Game.get_floor_scene_path(1) and Input.is_action_just_pressed("interact"):
+		if player_in_darkness_switch and _can_activate_darkness_switch():
+			_activate_darkness_switch()
+			return
+		if player_in_darkness_door and darkness_door_open:
+			changing_scene = true
+			get_tree().change_scene_to_file(Game.DARKNESS_CHALLENGE_SCENE)
+			return
 
 	_check_pit_fall()
 	
@@ -160,6 +193,10 @@ func _update_hud():
 		state_label.text = Game.get_relic_summary_text()
 
 func _get_hint_text(is_test_room: bool, is_boss_room: bool, enemies_left: int) -> String:
+	if scene_file_path == Game.get_floor_scene_path(1) and player_in_darkness_switch and _can_activate_darkness_switch():
+		return "E activate the hidden switch"
+	if scene_file_path == Game.get_floor_scene_path(1) and player_in_darkness_door and darkness_door_open:
+		return "E enter the room of complete darkness"
 	if enemies_left <= 0 and player_in_exit_area:
 		return "E use gate  |  LMB attack  |  RMB skill  |  Esc retreat" if player.attack_type == "magic" else "E use gate  |  LMB attack  |  RMB kick  |  Esc retreat"
 	if is_test_room:
@@ -255,8 +292,54 @@ func _on_exit_area_body_exited(body: Node):
 		_update_hud()
 
 func _get_alive_enemy_count() -> int:
+	var tree: SceneTree = get_tree()
+	if tree == null:
+		return 0
 	var count = 0
-	for enemy in get_tree().get_nodes_in_group("enemies"):
+	for enemy in tree.get_nodes_in_group("enemies"):
 		if is_instance_valid(enemy):
 			count += 1
 	return count
+
+func _setup_darkness_gate():
+	if scene_file_path != Game.get_floor_scene_path(1):
+		return
+	if darkness_switch != null:
+		darkness_switch.visible = true
+		darkness_switch.body_entered.connect(_on_darkness_switch_body_entered)
+		darkness_switch.body_exited.connect(_on_darkness_switch_body_exited)
+	if darkness_door != null:
+		darkness_door.visible = false
+		darkness_door.body_entered.connect(_on_darkness_door_body_entered)
+		darkness_door.body_exited.connect(_on_darkness_door_body_exited)
+
+func _can_activate_darkness_switch() -> bool:
+	return not darkness_door_open and _get_alive_enemy_count() == 0
+
+func _activate_darkness_switch():
+	darkness_door_open = true
+	if darkness_door != null:
+		darkness_door.visible = true
+	if secret_flash_label != null:
+		secret_flash_label.text = "A door opens into absolute dark."
+		secret_flash_label.visible = true
+
+func _on_darkness_switch_body_entered(body: Node):
+	if body == player:
+		player_in_darkness_switch = true
+		_update_hud()
+
+func _on_darkness_switch_body_exited(body: Node):
+	if body == player:
+		player_in_darkness_switch = false
+		_update_hud()
+
+func _on_darkness_door_body_entered(body: Node):
+	if body == player:
+		player_in_darkness_door = true
+		_update_hud()
+
+func _on_darkness_door_body_exited(body: Node):
+	if body == player:
+		player_in_darkness_door = false
+		_update_hud()

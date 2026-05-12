@@ -1,7 +1,6 @@
 extends CharacterBody2D
 
 signal defeated
-signal died
 
 const CARD_SCENE = preload("res://scenes/game/projectiles/SecretCard.tscn")
 const SCYTHE_SCENE = preload("res://scenes/game/projectiles/SecretScythe.tscn")
@@ -281,6 +280,7 @@ func _end_secret_fight():
 		return
 	defeated_started = true
 	defeated.emit()
+	remove_from_group("enemies")
 	queue_free()
 
 func _update_health_bar():

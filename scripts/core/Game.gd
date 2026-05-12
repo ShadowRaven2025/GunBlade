@@ -14,6 +14,7 @@ const FLOOR_SCENES := {
 	3: "res://scenes/game/levels/WardenThrone.tscn"
 }
 const SECRET_BOSS_SCENE := "res://scenes/game/levels/SecretBossRoom.tscn"
+const DARKNESS_CHALLENGE_SCENE := "res://scenes/game/levels/DarknessChallengeRoom.tscn"
 const BOSS_RELICS := [
 	{
 		"id": "ember_crown",
@@ -47,6 +48,7 @@ var gold: int = 0
 var current_run_data: Dictionary = {}
 var is_paused: bool = false
 var selected_character: String = "warrior"
+var selected_secret_boss: String = "priest"
 var settings: Dictionary = {
 	"fullscreen": false,
 	"graphics_quality": "medium"
@@ -63,11 +65,24 @@ const CHARACTER_CONFIGS := {
 		"attack_frames": 4,
 		"attack_hit_frame": 2,
 		"attack_type": "melee",
+		"kick_attack_type": "parry",
 		"max_health": 120,
 		"speed": 265.0,
-		"jump_velocity": -475.0,
+		"jump_velocity": -600.0,
 		"attack_damage": 16,
-		"attack_range": 54.0
+		"attack_range": 54.0,
+		"attack_cooldown": 0.28,
+		"attack_anim_speed": 0.085,
+		"kick_damage": 80,
+		"kick_range": 96.0,
+		"kick_hit_radius": 64.0,
+		"kick_cooldown": 3.0,
+		"kick_hit_frame": 2,
+		"kick_knockback_force": 620.0,
+		"parry_duration": 2.0,
+		"special_ability": "heal",
+		"special_heal_amount": 32,
+		"special_cooldown": 8.0
 	},
 	"archer": {
 		"label": "Archer",
@@ -154,7 +169,7 @@ const CHARACTER_CONFIGS := {
 		"attack_frames": 11,
 		"attack_hit_frame": 4,
 		"attack_pose_frame": -1,
-		"attack_type": "magic",
+		"attack_type": "secret_boss",
 		"max_health": 150,
 		"speed": 275.0,
 		"jump_velocity": -485.0,
@@ -177,7 +192,8 @@ const CHARACTER_CONFIGS := {
 }
 
 var persistent_unlocks: Dictionary = {
-	"secret_priest_unlocked": false
+	"secret_priest_unlocked": false,
+	"any_secret_boss_defeated": false
 }
 
 func _ready():
@@ -249,8 +265,10 @@ func new_game(secret_route: bool = false):
 		"damage_dealt": 0,
 		"items_collected": 0,
 		"secret_route": secret_route,
+		"secret_boss": selected_secret_boss,
 		"secret_step": 0,
-		"secret_priest_unlocked": secret_priest_was_unlocked
+		"secret_priest_unlocked": secret_priest_was_unlocked,
+		"any_secret_boss_defeated": is_any_secret_boss_defeated()
 	}
 	save_game()
 
@@ -268,6 +286,14 @@ func get_selected_character_config() -> Dictionary:
 func is_secret_route_active() -> bool:
 	return bool(current_run_data.get("secret_route", false))
 
+func set_selected_secret_boss(boss_id: String):
+	selected_secret_boss = boss_id
+	current_run_data["secret_boss"] = boss_id
+	save_game()
+
+func get_selected_secret_boss() -> String:
+	return str(current_run_data.get("secret_boss", selected_secret_boss))
+
 func get_secret_step() -> int:
 	return int(current_run_data.get("secret_step", 0))
 
@@ -278,7 +304,16 @@ func set_secret_step(step: int):
 func unlock_secret_priest():
 	persistent_unlocks["secret_priest_unlocked"] = true
 	current_run_data["secret_priest_unlocked"] = true
+	mark_secret_boss_defeated()
 	save_game()
+
+func mark_secret_boss_defeated():
+	persistent_unlocks["any_secret_boss_defeated"] = true
+	current_run_data["any_secret_boss_defeated"] = true
+	save_game()
+
+func is_any_secret_boss_defeated() -> bool:
+	return bool(persistent_unlocks.get("any_secret_boss_defeated", false)) or bool(current_run_data.get("any_secret_boss_defeated", false))
 
 func is_secret_priest_unlocked() -> bool:
 	return bool(persistent_unlocks.get("secret_priest_unlocked", false)) or bool(current_run_data.get("secret_priest_unlocked", false))
@@ -417,6 +452,7 @@ func load_game():
 		gold = int(current_run_data.get("gold", 0))
 		selected_character = current_run_data.get("character", selected_character)
 		persistent_unlocks["secret_priest_unlocked"] = bool(current_run_data.get("secret_priest_unlocked", false))
+		persistent_unlocks["any_secret_boss_defeated"] = bool(current_run_data.get("any_secret_boss_defeated", false))
 		save_file.close()
 
 func game_over():

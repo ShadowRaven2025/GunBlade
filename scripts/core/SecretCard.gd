@@ -15,6 +15,7 @@ const SUIT_COLORS: Array[Color] = [
 
 var velocity: Vector2 = Vector2.ZERO
 var target: Node2D = null
+var damages_enemies: bool = false
 
 @onready var suit_label: Label = $Suit
 
@@ -24,9 +25,13 @@ func setup(start_velocity: Vector2, card_damage: int, homing: float = 0.0):
 	homing_strength = homing
 	rotation = velocity.angle()
 
+func setup_player_suit(start_velocity: Vector2, suit_damage: int, homing: float = 0.0):
+	setup(start_velocity, suit_damage, homing)
+	damages_enemies = true
+
 func _ready():
 	body_entered.connect(_on_body_entered)
-	target = get_tree().get_first_node_in_group("player")
+	target = get_tree().get_first_node_in_group("enemies") if damages_enemies else get_tree().get_first_node_in_group("player")
 	_apply_random_suit()
 
 func _physics_process(delta: float):
@@ -41,6 +46,11 @@ func _physics_process(delta: float):
 
 func _on_body_entered(body: Node):
 	if body is Player:
+		if damages_enemies:
+			return
+		body.take_damage(damage)
+		queue_free()
+	elif damages_enemies and body.is_in_group("enemies") and body.has_method("take_damage"):
 		body.take_damage(damage)
 		queue_free()
 	elif body is TileMapLayer or body is StaticBody2D:

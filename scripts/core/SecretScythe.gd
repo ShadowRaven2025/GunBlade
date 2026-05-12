@@ -7,6 +7,7 @@ extends Area2D
 
 var velocity: Vector2 = Vector2.ZERO
 var spin_speed: float = 8.0
+var damages_enemies: bool = false
 
 func setup(start_velocity: Vector2, scythe_damage: int):
 	velocity = start_velocity
@@ -16,6 +17,10 @@ func setup(start_velocity: Vector2, scythe_damage: int):
 func setup_final_fall(start_velocity: Vector2, scythe_damage: int):
 	setup(start_velocity, scythe_damage)
 	creates_light_beam_on_ground = true
+
+func setup_player_scythe(start_velocity: Vector2, scythe_damage: int):
+	setup(start_velocity, scythe_damage)
+	damages_enemies = true
 
 func _ready():
 	body_entered.connect(_on_body_entered)
@@ -29,6 +34,11 @@ func _physics_process(delta: float):
 
 func _on_body_entered(body: Node):
 	if body is Player:
+		if damages_enemies:
+			return
+		body.take_damage(damage)
+		queue_free()
+	elif damages_enemies and body.is_in_group("enemies") and body.has_method("take_damage"):
 		body.take_damage(damage)
 		queue_free()
 	elif body is TileMapLayer or body is StaticBody2D:

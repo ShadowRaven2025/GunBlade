@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/DarkKnightBoss.gd" id="1_dark_boss"]
+
+[sub_resource type="RectangleShape2D" id="Shape_dark_boss"]
+size = Vector2(34, 50)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark_fill"]
+bg_color = Color(0.03, 0.03, 0.04, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark_bg"]
+bg_color = Color(0.09, 0.08, 0.09, 0.92)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="DarkKnightBoss" type="CharacterBody2D"]
+script = ExtResource("1_dark_boss")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -10)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, -8)
+shape = SubResource("Shape_dark_boss")
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+offset_left = -42.0
+offset_top = -50.0
+offset_right = 42.0
+offset_bottom = -39.0
+value = 360.0
+show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_dark_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_dark_fill")

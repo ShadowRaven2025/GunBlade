@@ -5,6 +5,8 @@ signal died
 const ARROW_SCENE = preload("res://scenes/game/projectiles/Arrow.tscn")
 const MAGIC_BOLT_SCENE = preload("res://scenes/game/projectiles/MagicBolt.tscn")
 const SKY_STAR_SCENE = preload("res://scenes/game/projectiles/SkyStar.tscn")
+const SECRET_SUIT_SCENE = preload("res://scenes/game/projectiles/SecretCard.tscn")
+const SECRET_SCYTHE_SCENE = preload("res://scenes/game/projectiles/SecretScythe.tscn")
 
 @export var speed: float = 260.0
 @export var jump_velocity: float = -420.0
@@ -22,6 +24,7 @@ const SKY_STAR_SCENE = preload("res://scenes/game/projectiles/SkyStar.tscn")
 @export var kick_cooldown: float = 0.52
 @export var kick_hit_frame: int = 1
 @export var kick_knockback_force: float = 340.0
+@export var parry_duration: float = 2.0
 @export var ranged_backstep_speed: float = 340.0
 @export var ranged_backstep_duration: float = 0.18
 @export var max_mana: float = 100.0
@@ -38,6 +41,8 @@ const SKY_STAR_SCENE = preload("res://scenes/game/projectiles/SkyStar.tscn")
 @export var starfall_extra_count: int = 7
 @export var starfall_spawn_spread: float = 520.0
 @export var starfall_tick_interval: float = 0.18
+@export var special_heal_amount: int = 0
+@export var special_cooldown: float = 8.0
 
 var current_health: int
 var can_attack: bool = true
@@ -56,6 +61,7 @@ var idle_texture: Texture2D
 var run_texture: Texture2D
 var attack_texture: Texture2D
 var attack_type: String = "melee"
+var kick_attack_type: String = "melee"
 var attack_pose_frame: int = -1
 var current_attack_mode: String = "primary"
 var can_double_jump: bool = false
@@ -68,6 +74,9 @@ var is_channeling_magic: bool = false
 var is_charging_starfall: bool = false
 var starfall_charge_time: float = 0.0
 var starfall_tick_time_left: float = 0.0
+var special_ability: String = ""
+var special_cooldown_left: float = 0.0
+var parry_time_left: float = 0.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var health_bar: ProgressBar = $HealthBar
@@ -104,7 +113,7 @@ func set_character_visuals(idle_path: String, run_path: String, attack_path: Str
 	attack_pose_frame = pose_frame
 	attack_type = next_attack_type
 	can_double_jump = enable_double_jump
-	if attack_type != "magic":
+	if attack_type != "magic" and attack_type != "secret_boss":
 		is_channeling_magic = false
 	sprite.texture = idle_texture
 	sprite.hframes = idle_frame_count
@@ -139,6 +148,8 @@ func _physics_process(delta):
 	
 	_update_magic_attack(delta)
 	_update_starfall_charge(delta)
+	_update_special_ability(delta)
+	_update_parry(delta)
 
 	if backstep_time_left > 0.0:
 		backstep_time_left = max(backstep_time_left - delta, 0.0)
@@ -152,7 +163,7 @@ func _physics_process(delta):
 	move_and_slide()
 	_animate(delta)
 	
-	if attack_type == "magic":
+	if attack_type == "magic" or attack_type == "secret_boss":
 		if Input.is_action_just_pressed("kick") and can_attack and not is_attacking and not is_channeling_magic:
 			_begin_starfall_charge()
 	elif Input.is_action_just_pressed("kick") and can_attack and not is_channeling_magic:
@@ -160,8 +171,43 @@ func _physics_process(delta):
 	elif attack_type != "magic" and Input.is_action_just_pressed("attack") and can_attack:
 		attack("primary")
 
+func _update_special_ability(delta: float):
+	if special_cooldown_left > 0.0:
+		special_cooldown_left = maxf(special_cooldown_left - delta, 0.0)
+	if special_ability == "heal" and Input.is_key_pressed(KEY_F) and special_cooldown_left == 0.0:
+		_use_heal_special()
+
+func _use_heal_special():
+	if current_health >= max_health or special_heal_amount <= 0:
+		return
+	current_health = mini(current_health + special_heal_amount, max_health)
+	special_cooldown_left = special_cooldown
+	_update_health_bar()
+	_spawn_heal_visual()
+
+func _spawn_heal_visual():
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var flash: ColorRect = ColorRect.new()
+	flash.color = Color(0.35, 1.0, 0.45, 0.55)
+	flash.size = Vector2(54.0, 64.0)
+	flash.position = global_position + Vector2(-27.0, -58.0)
+	parent.add_child(flash)
+	var tween: Tween = flash.create_tween()
+	tween.tween_property(flash, "color:a", 0.0, 0.35)
+	tween.parallel().tween_property(flash, "position:y", flash.position.y - 18.0, 0.35)
+	tween.finished.connect(flash.queue_free)
+
+func _update_parry(delta: float):
+	if parry_time_left <= 0.0:
+		return
+	parry_time_left = maxf(parry_time_left - delta, 0.0)
+	if parry_time_left == 0.0:
+		sprite.modulate = Game.get_selected_character_config().get("modulate", Color(1, 1, 1, 1))
+
 func _update_magic_attack(delta):
-	if attack_type != "magic":
+	if attack_type != "magic" and attack_type != "secret_boss":
 		return
 	if is_charging_starfall:
 		is_channeling_magic = true
@@ -191,7 +237,7 @@ func _update_magic_attack(delta):
 	_update_mana_bar()
 
 func _update_starfall_charge(delta):
-	if attack_type != "magic":
+	if attack_type != "magic" and attack_type != "secret_boss":
 		return
 	if not is_charging_starfall:
 		return
@@ -217,6 +263,9 @@ func _update_starfall_charge(delta):
 
 func _begin_starfall_charge():
 	if current_mana < starfall_min_mana_cost:
+		return
+	if attack_type == "secret_boss":
+		_cast_secret_scythe_burst()
 		return
 	is_charging_starfall = true
 	is_channeling_magic = true
@@ -365,7 +414,7 @@ func attack(mode: String = "primary"):
 
 func _get_attack_frame_count() -> int:
 	if current_attack_mode == "kick":
-		if attack_type == "magic":
+		if attack_type == "magic" or attack_type == "secret_boss":
 			return attack_frame_count
 		return mini(4, attack_frame_count)
 	return attack_frame_count
@@ -377,14 +426,14 @@ func _get_attack_texture_frame_count() -> int:
 
 func _perform_attack_hit():
 	if current_attack_mode == "kick":
-		if attack_type == "magic":
+		if attack_type == "magic" or attack_type == "secret_boss":
 			return
 		if attack_type == "ranged":
 			_perform_ranged_backstep()
 			return
 		_kick_enemies_in_attack()
 		return
-	if attack_type == "magic":
+	if attack_type == "magic" or attack_type == "secret_boss":
 		return
 	if attack_type == "ranged":
 		_fire_arrow()
@@ -406,6 +455,12 @@ func _damage_enemies_in_attack():
 			enemy.take_damage(attack_damage)
 
 func _kick_enemies_in_attack():
+	if kick_attack_type == "parry":
+		_start_parry()
+		return
+	if kick_attack_type == "shockwave":
+		_cast_warrior_shockwave()
+		return
 	var attack_center = global_position + Vector2(kick_range * facing_direction, -6.0)
 	for node in get_tree().get_nodes_in_group("enemies"):
 		if not node.has_method("take_damage"):
@@ -420,6 +475,88 @@ func _kick_enemies_in_attack():
 			enemy.take_damage(kick_damage)
 			if enemy.has_method("apply_knockback"):
 				enemy.apply_knockback(Vector2(kick_knockback_force * facing_direction, -120.0))
+
+func _cast_warrior_shockwave():
+	var start_x: float = global_position.x
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if not node.has_method("take_damage"):
+			continue
+		var enemy: Node2D = node as Node2D
+		if not is_instance_valid(enemy):
+			continue
+		var to_enemy: Vector2 = enemy.global_position - global_position
+		var is_in_front: bool = sign(to_enemy.x) == sign(facing_direction) or absf(to_enemy.x) < 8.0
+		var is_in_range: bool = absf(to_enemy.x) <= kick_range and absf(to_enemy.y) <= kick_hit_radius
+		if is_in_front and is_in_range:
+			enemy.take_damage(kick_damage)
+			if enemy.has_method("apply_knockback"):
+				enemy.apply_knockback(Vector2(kick_knockback_force * facing_direction, -80.0))
+	_spawn_shockwave_visual(start_x)
+
+func _spawn_shockwave_visual(start_x: float):
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var wave: ColorRect = ColorRect.new()
+	wave.color = Color(0.95, 0.82, 0.35, 0.72)
+	wave.size = Vector2(kick_range, 18.0)
+	wave.position = Vector2(start_x if facing_direction > 0.0 else start_x - kick_range, global_position.y - 18.0)
+	parent.add_child(wave)
+	var tween: Tween = wave.create_tween()
+	tween.tween_property(wave, "color:a", 0.0, 0.22)
+	tween.parallel().tween_property(wave, "size:y", 4.0, 0.22)
+	tween.finished.connect(wave.queue_free)
+
+func _start_parry():
+	parry_time_left = parry_duration
+	sprite.modulate = Color(0.72, 0.88, 1.0, 1.0)
+	_spawn_parry_visual()
+
+func _trigger_parry_counter():
+	parry_time_left = 0.0
+	sprite.modulate = Game.get_selected_character_config().get("modulate", Color(1, 1, 1, 1))
+	var counter_center: Vector2 = global_position + Vector2(kick_range * facing_direction, -8.0)
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if not node.has_method("take_damage"):
+			continue
+		var enemy: Node2D = node as Node2D
+		if not is_instance_valid(enemy):
+			continue
+		var to_enemy: Vector2 = enemy.global_position - global_position
+		var is_in_front: bool = sign(to_enemy.x) == sign(facing_direction) or absf(to_enemy.x) < 10.0
+		var is_in_range: bool = enemy.global_position.distance_to(counter_center) <= kick_hit_radius
+		if is_in_front and is_in_range:
+			enemy.take_damage(kick_damage)
+			if enemy.has_method("apply_knockback"):
+				enemy.apply_knockback(Vector2(kick_knockback_force * facing_direction, -150.0))
+	_spawn_counter_visual()
+
+func _spawn_parry_visual():
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var shield: ColorRect = ColorRect.new()
+	shield.color = Color(0.35, 0.7, 1.0, 0.42)
+	shield.size = Vector2(50.0, 68.0)
+	shield.position = global_position + Vector2(-25.0, -62.0)
+	parent.add_child(shield)
+	var tween: Tween = shield.create_tween()
+	tween.tween_property(shield, "color:a", 0.0, parry_duration)
+	tween.finished.connect(shield.queue_free)
+
+func _spawn_counter_visual():
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var slash: ColorRect = ColorRect.new()
+	slash.color = Color(0.9, 0.95, 1.0, 0.82)
+	slash.size = Vector2(kick_range, 22.0)
+	slash.position = Vector2(global_position.x if facing_direction > 0.0 else global_position.x - kick_range, global_position.y - 28.0)
+	parent.add_child(slash)
+	var tween: Tween = slash.create_tween()
+	tween.tween_property(slash, "color:a", 0.0, 0.24)
+	tween.parallel().tween_property(slash, "size:y", 5.0, 0.24)
+	tween.finished.connect(slash.queue_free)
 
 func _fire_arrow(flat_flight: bool = false):
 	var arrow = ARROW_SCENE.instantiate()
@@ -443,12 +580,51 @@ func _perform_ranged_backstep():
 	_fire_arrow(true)
 
 func _fire_magic_bolt():
+	if attack_type == "secret_boss":
+		_fire_secret_suit_fan()
+		return
 	var bolt = MAGIC_BOLT_SCENE.instantiate()
 	get_parent().add_child(bolt)
 	var spawn_offset = Vector2(18.0 * facing_direction, -16.0)
 	var launch_velocity = Vector2(760.0 * facing_direction, randf_range(-55.0, 55.0))
 	bolt.global_position = sprite.global_position + spawn_offset
 	bolt.setup(facing_direction, magic_bolt_damage + int(attack_damage * 0.35), launch_velocity)
+
+func _fire_secret_suit_fan():
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var base_direction: Vector2 = Vector2(facing_direction, 0.0)
+	for index in range(3):
+		var suit = SECRET_SUIT_SCENE.instantiate()
+		parent.add_child(suit)
+		suit.global_position = sprite.global_position + Vector2(22.0 * facing_direction, -18.0 + float(index - 1) * 8.0)
+		var angle_offset: float = deg_to_rad(-12.0 + float(index) * 12.0)
+		var direction: Vector2 = base_direction.rotated(angle_offset).normalized()
+		suit.setup_player_suit(direction * 360.0, magic_bolt_damage + int(attack_damage * 0.35), 0.18)
+
+func _cast_secret_scythe_burst():
+	if not can_attack or current_mana < starfall_min_mana_cost:
+		return
+	current_mana = maxf(current_mana - starfall_min_mana_cost, 0.0)
+	can_attack = false
+	is_channeling_magic = true
+	anim_timer = 0.0
+	current_frame = 0
+	_set_animation("attack", attack_texture, _get_attack_texture_frame_count())
+	var parent: Node = get_parent()
+	if parent != null:
+		for index in range(2):
+			var scythe = SECRET_SCYTHE_SCENE.instantiate()
+			parent.add_child(scythe)
+			scythe.global_position = sprite.global_position + Vector2(24.0 * facing_direction, -18.0 - float(index) * 18.0)
+			var velocity_offset: Vector2 = Vector2(0.0, -60.0 + float(index) * 120.0)
+			scythe.setup_player_scythe(Vector2(420.0 * facing_direction, 0.0) + velocity_offset, starfall_base_damage + int(attack_damage * 0.55))
+	_update_mana_bar()
+	await get_tree().create_timer(0.22).timeout
+	is_channeling_magic = false
+	await get_tree().create_timer(kick_cooldown).timeout
+	can_attack = true
 
 func _reset_jump_state():
 	jumps_remaining = 2 if can_double_jump else 1
@@ -460,11 +636,14 @@ func _update_health_bar():
 func _update_mana_bar():
 	if mana_bar == null:
 		return
-	mana_bar.visible = attack_type == "magic"
+	mana_bar.visible = attack_type == "magic" or attack_type == "secret_boss"
 	mana_bar.max_value = max_mana
 	mana_bar.value = current_mana
 
 func take_damage(amount: int):
+	if parry_time_left > 0.0:
+		_trigger_parry_counter()
+		return
 	current_health -= amount
 	current_health = max(current_health, 0)
 	_update_health_bar()

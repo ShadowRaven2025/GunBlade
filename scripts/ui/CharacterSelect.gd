@@ -19,6 +19,7 @@ func _ready():
 
 func _input(event: InputEvent):
 	if event.is_action_pressed("secret_start"):
+		Game.set_selected_secret_boss("dark_knight" if highlighted_character == "warrior" else "priest")
 		_start_run(highlighted_character, true)
 	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_G:
 		_try_start_secret_boss()
