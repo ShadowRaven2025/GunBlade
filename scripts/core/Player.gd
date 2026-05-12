@@ -43,6 +43,7 @@ const SECRET_SCYTHE_SCENE = preload("res://scenes/game/projectiles/SecretScythe.
 @export var starfall_tick_interval: float = 0.18
 @export var special_heal_amount: int = 0
 @export var special_cooldown: float = 8.0
+@export var developer_damage_multiplier: int = 1000
 
 var current_health: int
 var can_attack: bool = true
@@ -77,6 +78,7 @@ var starfall_tick_time_left: float = 0.0
 var special_ability: String = ""
 var special_cooldown_left: float = 0.0
 var parry_time_left: float = 0.0
+var developer_mode_enabled: bool = false
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var health_bar: ProgressBar = $HealthBar
@@ -127,6 +129,9 @@ func set_character_visuals(idle_path: String, run_path: String, attack_path: Str
 	_update_mana_bar()
 
 func _physics_process(delta):
+	_sync_developer_mode()
+	_apply_developer_mode_benefits()
+
 	var input_axis = Input.get_axis("move_left", "move_right")
 	is_moving = absf(input_axis) > 0.01
 	if is_moving:
@@ -184,6 +189,41 @@ func _use_heal_special():
 	special_cooldown_left = special_cooldown
 	_update_health_bar()
 	_spawn_heal_visual()
+
+func _sync_developer_mode():
+	var enabled := Game.is_developer_mode_enabled()
+	if developer_mode_enabled == enabled:
+		return
+	developer_mode_enabled = enabled
+	_apply_developer_mode_benefits()
+	_spawn_developer_mode_visual(developer_mode_enabled)
+
+func _apply_developer_mode_benefits():
+	if not developer_mode_enabled:
+		return
+	current_health = max_health
+	current_mana = max_mana
+	_update_health_bar()
+	_update_mana_bar()
+
+func _get_developer_damage(amount: int) -> int:
+	if not developer_mode_enabled:
+		return amount
+	return maxi(amount * developer_damage_multiplier, amount)
+
+func _spawn_developer_mode_visual(enabled: bool):
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var flash: ColorRect = ColorRect.new()
+	flash.color = Color(1.0, 0.84, 0.18, 0.62) if enabled else Color(0.35, 0.45, 0.55, 0.42)
+	flash.size = Vector2(64.0, 78.0)
+	flash.position = global_position + Vector2(-32.0, -70.0)
+	parent.add_child(flash)
+	var tween: Tween = flash.create_tween()
+	tween.tween_property(flash, "color:a", 0.0, 0.3)
+	tween.parallel().tween_property(flash, "position:y", flash.position.y - 20.0, 0.3)
+	tween.finished.connect(flash.queue_free)
 
 func _spawn_heal_visual():
 	var parent: Node = get_parent()
@@ -305,7 +345,7 @@ func _get_max_starfall_charge_from_mana() -> float:
 
 func _cast_starfall(charge_ratio: float):
 	var star_count := starfall_base_count + int(round(starfall_extra_count * charge_ratio))
-	var main_damage := starfall_base_damage + int(round(starfall_extra_damage * charge_ratio)) + int(attack_damage * 0.4)
+	var main_damage := _get_developer_damage(starfall_base_damage + int(round(starfall_extra_damage * charge_ratio)) + int(attack_damage * 0.4))
 	var split_damage: int = maxi(2, int(round(main_damage * 0.22)))
 	var split_count := 8 + int(round(6.0 * charge_ratio))
 	var scale_value := lerpf(0.9, 1.8, charge_ratio)
@@ -452,7 +492,7 @@ func _damage_enemies_in_attack():
 		var is_in_front = sign(to_enemy.x) == sign(facing_direction) or absf(to_enemy.x) < 4.0
 		var is_in_range = enemy.global_position.distance_to(attack_center) <= attack_hit_radius
 		if is_in_front and is_in_range:
-			enemy.take_damage(attack_damage)
+			enemy.take_damage(_get_developer_damage(attack_damage))
 
 func _kick_enemies_in_attack():
 	if kick_attack_type == "parry":
@@ -472,7 +512,7 @@ func _kick_enemies_in_attack():
 		var is_in_front = sign(to_enemy.x) == sign(facing_direction) or absf(to_enemy.x) < 6.0
 		var is_in_range = enemy.global_position.distance_to(attack_center) <= kick_hit_radius
 		if is_in_front and is_in_range:
-			enemy.take_damage(kick_damage)
+			enemy.take_damage(_get_developer_damage(kick_damage))
 			if enemy.has_method("apply_knockback"):
 				enemy.apply_knockback(Vector2(kick_knockback_force * facing_direction, -120.0))
 
@@ -488,7 +528,7 @@ func _cast_warrior_shockwave():
 		var is_in_front: bool = sign(to_enemy.x) == sign(facing_direction) or absf(to_enemy.x) < 8.0
 		var is_in_range: bool = absf(to_enemy.x) <= kick_range and absf(to_enemy.y) <= kick_hit_radius
 		if is_in_front and is_in_range:
-			enemy.take_damage(kick_damage)
+			enemy.take_damage(_get_developer_damage(kick_damage))
 			if enemy.has_method("apply_knockback"):
 				enemy.apply_knockback(Vector2(kick_knockback_force * facing_direction, -80.0))
 	_spawn_shockwave_visual(start_x)
@@ -526,7 +566,7 @@ func _trigger_parry_counter():
 		var is_in_front: bool = sign(to_enemy.x) == sign(facing_direction) or absf(to_enemy.x) < 10.0
 		var is_in_range: bool = enemy.global_position.distance_to(counter_center) <= kick_hit_radius
 		if is_in_front and is_in_range:
-			enemy.take_damage(kick_damage)
+			enemy.take_damage(_get_developer_damage(kick_damage))
 			if enemy.has_method("apply_knockback"):
 				enemy.apply_knockback(Vector2(kick_knockback_force * facing_direction, -150.0))
 	_spawn_counter_visual()
@@ -568,7 +608,7 @@ func _fire_arrow(flat_flight: bool = false):
 	if not flat_flight:
 		launch_velocity.y = -110.0
 	arrow.global_position = sprite.global_position + spawn_offset
-	arrow.setup(facing_direction, attack_damage, launch_velocity, flat_flight)
+	arrow.setup(facing_direction, _get_developer_damage(attack_damage), launch_velocity, flat_flight)
 
 func _perform_ranged_backstep():
 	backstep_direction = -facing_direction
@@ -588,7 +628,7 @@ func _fire_magic_bolt():
 	var spawn_offset = Vector2(18.0 * facing_direction, -16.0)
 	var launch_velocity = Vector2(760.0 * facing_direction, randf_range(-55.0, 55.0))
 	bolt.global_position = sprite.global_position + spawn_offset
-	bolt.setup(facing_direction, magic_bolt_damage + int(attack_damage * 0.35), launch_velocity)
+	bolt.setup(facing_direction, _get_developer_damage(magic_bolt_damage + int(attack_damage * 0.35)), launch_velocity)
 
 func _fire_secret_suit_fan():
 	var parent: Node = get_parent()
@@ -601,7 +641,7 @@ func _fire_secret_suit_fan():
 		suit.global_position = sprite.global_position + Vector2(22.0 * facing_direction, -18.0 + float(index - 1) * 8.0)
 		var angle_offset: float = deg_to_rad(-12.0 + float(index) * 12.0)
 		var direction: Vector2 = base_direction.rotated(angle_offset).normalized()
-		suit.setup_player_suit(direction * 360.0, magic_bolt_damage + int(attack_damage * 0.35), 0.18)
+		suit.setup_player_suit(direction * 360.0, _get_developer_damage(magic_bolt_damage + int(attack_damage * 0.35)), 0.18)
 
 func _cast_secret_scythe_burst():
 	if not can_attack or current_mana < starfall_min_mana_cost:
@@ -619,7 +659,7 @@ func _cast_secret_scythe_burst():
 			parent.add_child(scythe)
 			scythe.global_position = sprite.global_position + Vector2(24.0 * facing_direction, -18.0 - float(index) * 18.0)
 			var velocity_offset: Vector2 = Vector2(0.0, -60.0 + float(index) * 120.0)
-			scythe.setup_player_scythe(Vector2(420.0 * facing_direction, 0.0) + velocity_offset, starfall_base_damage + int(attack_damage * 0.55))
+			scythe.setup_player_scythe(Vector2(420.0 * facing_direction, 0.0) + velocity_offset, _get_developer_damage(starfall_base_damage + int(attack_damage * 0.55)))
 	_update_mana_bar()
 	await get_tree().create_timer(0.22).timeout
 	is_channeling_magic = false
@@ -641,6 +681,10 @@ func _update_mana_bar():
 	mana_bar.value = current_mana
 
 func take_damage(amount: int):
+	if developer_mode_enabled:
+		current_health = max_health
+		_update_health_bar()
+		return
 	if parry_time_left > 0.0:
 		_trigger_parry_counter()
 		return

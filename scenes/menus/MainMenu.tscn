@@ -303,7 +303,7 @@ autowrap_mode = 3
 text = "Monk starfall splits on impact. Mana is visible below health. Secret boss route is wired through the violet covenant path."
 
 [node name="SettingsCard" type="Panel" parent="Panel/Content/RightColumn"]
-custom_minimum_size = Vector2(0, 174)
+custom_minimum_size = Vector2(0, 214)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_info_card")
 
@@ -351,6 +351,16 @@ offset_bottom = 146.0
 theme_override_colors/font_color = Color(0.88, 0.86, 0.78, 0.96)
 theme_override_font_sizes/font_size = 14
 text = "Fullscreen Mode"
+
+[node name="DeveloperModeToggle" type="CheckButton" parent="Panel/Content/RightColumn/SettingsCard"]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 152.0
+offset_right = 302.0
+offset_bottom = 188.0
+theme_override_colors/font_color = Color(1, 0.82, 0.38, 0.98)
+theme_override_font_sizes/font_size = 14
+text = "Developer Mode"
 
 [node name="Footer" type="Label" parent="Panel/Content/RightColumn"]
 layout_mode = 2

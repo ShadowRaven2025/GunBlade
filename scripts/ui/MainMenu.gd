@@ -5,6 +5,7 @@ func _ready():
 	$Panel/Content/LeftColumn/ButtonRow/TestRoom.pressed.connect(_on_test_room_pressed)
 	$Panel/Content/RightColumn/SettingsCard/GraphicsRow/GraphicsOption.item_selected.connect(_on_graphics_selected)
 	$Panel/Content/RightColumn/SettingsCard/FullscreenToggle.toggled.connect(_on_fullscreen_toggled)
+	$Panel/Content/RightColumn/SettingsCard/DeveloperModeToggle.toggled.connect(_on_developer_mode_toggled)
 	$Panel/Content/LeftColumn/ButtonRow/Quit.pressed.connect(_on_quit_pressed)
 	_setup_settings_ui()
 
@@ -22,6 +23,7 @@ func _setup_settings_ui():
 		_:
 			graphics_option.select(1)
 	$Panel/Content/RightColumn/SettingsCard/FullscreenToggle.button_pressed = Game.is_fullscreen_enabled()
+	$Panel/Content/RightColumn/SettingsCard/DeveloperModeToggle.button_pressed = Game.is_developer_mode_enabled()
 
 func _on_new_game_pressed():
 	get_tree().change_scene_to_file("res://scenes/menus/CharacterSelect.tscn")
@@ -44,3 +46,6 @@ func _on_graphics_selected(index: int):
 
 func _on_fullscreen_toggled(enabled: bool):
 	Game.set_fullscreen_enabled(enabled)
+
+func _on_developer_mode_toggled(enabled: bool):
+	Game.set_developer_mode_enabled(enabled)

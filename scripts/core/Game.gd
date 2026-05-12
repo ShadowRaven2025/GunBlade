@@ -51,7 +51,8 @@ var selected_character: String = "warrior"
 var selected_secret_boss: String = "priest"
 var settings: Dictionary = {
 	"fullscreen": false,
-	"graphics_quality": "medium"
+	"graphics_quality": "medium",
+	"developer_mode": false
 }
 
 const CHARACTER_CONFIGS := {
@@ -211,11 +212,13 @@ func load_settings():
 	if not GRAPHICS_QUALITY_FACTORS.has(graphics_quality):
 		graphics_quality = "medium"
 	settings["graphics_quality"] = graphics_quality
+	settings["developer_mode"] = bool(config.get_value("gameplay", "developer_mode", settings["developer_mode"]))
 
 func save_settings():
 	var config = ConfigFile.new()
 	config.set_value("display", "fullscreen", settings["fullscreen"])
 	config.set_value("display", "graphics_quality", settings["graphics_quality"])
+	config.set_value("gameplay", "developer_mode", settings["developer_mode"])
 	config.save(SETTINGS_PATH)
 
 func apply_display_settings():
@@ -243,6 +246,17 @@ func set_graphics_quality(quality: String):
 
 func get_graphics_quality() -> String:
 	return str(settings.get("graphics_quality", "medium"))
+
+func set_developer_mode_enabled(enabled: bool):
+	settings["developer_mode"] = enabled
+	save_settings()
+
+func is_developer_mode_enabled() -> bool:
+	return bool(settings.get("developer_mode", false))
+
+func toggle_developer_mode() -> bool:
+	set_developer_mode_enabled(not is_developer_mode_enabled())
+	return is_developer_mode_enabled()
 
 func toggle_pause():
 	is_paused = !is_paused
