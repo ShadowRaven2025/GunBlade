@@ -7,13 +7,20 @@ signal took_damage(amount: int)
 const ENEMY_SCENE = preload("res://scenes/game/characters/Enemy.tscn")
 
 @export var max_health: int = 30
+@export_enum("pawn", "rush", "guard", "brute", "ranged", "splitter", "blink") var enemy_type: String = "pawn"
 @export var damage: int = 10
 @export var speed: float = 90.0
 @export var follow_range: float = 340.0
 @export var attack_range: float = 48.0
 @export var gravity: float = 980.0
 @export var attack_cooldown: float = 1.0
+@export var projectile_cooldown: float = 1.6
+@export var projectile_damage: int = 8
+@export var split_on_death: bool = false
+@export var blink_cooldown: float = 2.4
+@export var blink_distance: float = 150.0
 @export var use_ai: bool = true
+@export var movement_locked: bool = false
 @export var respawn_on_death: bool = false
 @export var respawn_delay: float = 1.5
 @export var knockback_recovery: float = 1800.0
@@ -47,6 +54,9 @@ var boss_leap_ready: bool = true
 var boss_leap_time_left: float = 0.0
 var boss_phase_two_active: bool = false
 var boss_phase_two_summoned: bool = false
+var projectile_ready: bool = true
+var blink_ready: bool = true
+var did_split: bool = false
 var base_speed: float = 0.0
 var base_damage: int = 0
 var base_modulate: Color = Color(1, 1, 1, 1)
@@ -61,6 +71,7 @@ var boss_pending_leap_direction: float = 0.0
 
 func _ready():
 	add_to_group("enemies")
+	_apply_enemy_type_defaults()
 	spawn_position = global_position
 	current_health = max_health
 	base_speed = speed
@@ -79,6 +90,9 @@ func _ready():
 		get_parent().register_enemy(self)
 
 func _physics_process(delta):
+	if movement_locked:
+		_physics_process_dummy(delta)
+		return
 	if not use_ai:
 		_physics_process_dummy(delta)
 		return
@@ -126,6 +140,15 @@ func _physics_process(delta):
 		var to_player = target_player.global_position - global_position
 		var horizontal_distance = absf(to_player.x)
 		var vertical_distance = absf(to_player.y)
+		if enemy_type == "blink" and _can_blink(horizontal_distance, vertical_distance):
+			_blink_near_player(sign(to_player.x))
+		if enemy_type == "ranged" and horizontal_distance <= follow_range and vertical_distance <= 130.0:
+			_handle_ranged_enemy(to_player, horizontal_distance)
+			move_and_slide()
+			_flip_sprite()
+			_set_animation("run" if absf(velocity.x) > 1.0 else "idle")
+			_advance_animation(delta)
+			return
 		if is_boss and _can_start_boss_leap(horizontal_distance, vertical_distance):
 			_begin_boss_telegraph(sign(to_player.x))
 			move_and_slide()
@@ -184,9 +207,68 @@ func _apply_knockback_motion(delta):
 
 func attack(player):
 	can_attack = false
+	_spawn_attack_effect()
 	player.take_damage(damage)
 	await get_tree().create_timer(attack_cooldown).timeout
 	can_attack = true
+
+func _handle_ranged_enemy(to_player: Vector2, horizontal_distance: float):
+	facing_direction = sign(to_player.x) if to_player.x != 0.0 else facing_direction
+	var keep_distance := attack_range * 0.72
+	if horizontal_distance < keep_distance:
+		velocity.x = -facing_direction * speed * 0.65
+	elif horizontal_distance > attack_range:
+		velocity.x = facing_direction * speed * 0.45
+	else:
+		velocity.x = 0.0
+	if projectile_ready and horizontal_distance <= attack_range:
+		_fire_enemy_projectile(Vector2(facing_direction, -0.08).normalized())
+
+func _fire_enemy_projectile(direction: Vector2):
+	projectile_ready = false
+	var bolt: ColorRect = ColorRect.new()
+	bolt.color = Color(1.0, 0.36, 0.18, 0.9)
+	bolt.size = Vector2(18.0, 7.0)
+	bolt.global_position = global_position + Vector2(16.0 * facing_direction, -18.0)
+	bolt.set_meta("velocity", direction * 360.0)
+	bolt.set_meta("damage", projectile_damage)
+	bolt.set_meta("life", 1.4)
+	bolt.set_meta("enemy_projectile", true)
+	get_parent().add_child(bolt)
+	_animate_enemy_projectile(bolt)
+	await get_tree().create_timer(projectile_cooldown).timeout
+	projectile_ready = true
+
+func _animate_enemy_projectile(bolt: ColorRect):
+	while is_instance_valid(bolt):
+		var delta := get_physics_process_delta_time()
+		var life := float(bolt.get_meta("life", 0.0)) - delta
+		if life <= 0.0:
+			bolt.queue_free()
+			return
+		bolt.set_meta("life", life)
+		bolt.global_position += bolt.get_meta("velocity", Vector2.ZERO) * delta
+		var player = get_tree().get_first_node_in_group("player")
+		if player != null and is_instance_valid(player) and player.global_position.distance_to(bolt.global_position) <= 28.0:
+			if player.has_method("take_damage"):
+				player.take_damage(int(bolt.get_meta("damage", projectile_damage)))
+			bolt.queue_free()
+			return
+		await get_tree().physics_frame
+
+func _can_blink(horizontal_distance: float, vertical_distance: float) -> bool:
+	return blink_ready and is_on_floor() and horizontal_distance >= 170.0 and horizontal_distance <= follow_range and vertical_distance <= 120.0
+
+func _blink_near_player(direction_to_player: float):
+	if direction_to_player == 0.0:
+		direction_to_player = facing_direction
+	blink_ready = false
+	_spawn_blink_effect(global_position)
+	global_position.x += direction_to_player * minf(blink_distance, 180.0)
+	facing_direction = direction_to_player
+	_spawn_blink_effect(global_position)
+	await get_tree().create_timer(blink_cooldown).timeout
+	blink_ready = true
 
 func _set_animation(animation_name: String):
 	if current_animation == animation_name:
@@ -222,12 +304,32 @@ func take_damage(amount: int):
 
 func die():
 	died.emit()
+	if split_on_death and not did_split:
+		did_split = true
+		_spawn_split_children()
 	if respawn_on_death:
 		_respawn_after_delay()
 		return
 	collision_shape.set_deferred("disabled", true)
 	hurtbox_shape.set_deferred("disabled", true)
 	queue_free()
+
+func _spawn_split_children():
+	if get_parent() == null:
+		return
+	for offset_x in [-28.0, 28.0]:
+		var child = ENEMY_SCENE.instantiate()
+		get_parent().add_child(child)
+		child.global_position = global_position + Vector2(offset_x, -8.0)
+		child.enemy_type = "rush"
+		child.max_health = maxi(12, int(max_health * 0.35))
+		child.damage = maxi(4, int(damage * 0.55))
+		child.speed = speed + 34.0
+		child.projectile_damage = projectile_damage
+		child.follow_range = follow_range
+		child.attack_range = 38.0
+		child.scale = Vector2(0.72, 0.72)
+		child.modulate = Color(0.9, 0.45, 1.0, 1)
 
 func apply_knockback(force: Vector2, duration: float = 0.18):
 	knockback_velocity = force
@@ -287,10 +389,86 @@ func _summon_phase_two_reinforcements():
 		summon.max_health = 48
 		summon.damage = 14
 		summon.speed = 108.0
+		summon.projectile_damage = 8
 		summon.follow_range = 880.0
 		summon.attack_range = 46.0
 		summon.gravity = gravity
 		summon.modulate = Color(1, 0.42, 0.34, 1)
+
+func _apply_enemy_type_defaults():
+	match enemy_type:
+		"rush":
+			max_health = max_health if max_health != 30 else 24
+			damage = damage if damage != 10 else 9
+			speed = speed if speed != 90.0 else 142.0
+			attack_cooldown = 0.72
+			modulate = Color(1.0, 0.35, 0.28, 1)
+			scale *= 0.88
+		"guard":
+			max_health = max_health if max_health != 30 else 58
+			damage = damage if damage != 10 else 13
+			speed = speed if speed != 90.0 else 62.0
+			attack_range = maxf(attack_range, 56.0)
+			modulate = Color(0.45, 0.66, 1.0, 1)
+			scale *= 1.15
+		"brute":
+			max_health = max_health if max_health != 30 else 82
+			damage = damage if damage != 10 else 22
+			speed = speed if speed != 90.0 else 52.0
+			attack_range = maxf(attack_range, 64.0)
+			attack_cooldown = 1.45
+			modulate = Color(0.62, 0.38, 0.24, 1)
+			scale *= 1.42
+		"ranged":
+			max_health = max_health if max_health != 30 else 26
+			damage = damage if damage != 10 else 7
+			speed = speed if speed != 90.0 else 78.0
+			attack_range = maxf(attack_range, 280.0)
+			follow_range = maxf(follow_range, 520.0)
+			modulate = Color(1.0, 0.58, 0.2, 1)
+			scale *= 0.95
+		"splitter":
+			max_health = max_health if max_health != 30 else 42
+			damage = damage if damage != 10 else 11
+			speed = speed if speed != 90.0 else 76.0
+			split_on_death = true
+			modulate = Color(0.82, 0.32, 1.0, 1)
+			scale *= 1.08
+		"blink":
+			max_health = max_health if max_health != 30 else 34
+			damage = damage if damage != 10 else 14
+			speed = speed if speed != 90.0 else 112.0
+			follow_range = maxf(follow_range, 560.0)
+			modulate = Color(0.36, 1.0, 0.82, 1)
+			scale *= 0.92
+
+func _spawn_attack_effect():
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var flash: ColorRect = ColorRect.new()
+	flash.color = base_modulate.lerp(Color(1, 1, 1, 1), 0.35)
+	flash.size = Vector2(34.0, 20.0) * scale.abs()
+	flash.global_position = global_position + Vector2(attack_range * 0.45 * facing_direction, -18.0)
+	parent.add_child(flash)
+	var tween := flash.create_tween()
+	tween.tween_property(flash, "color:a", 0.0, 0.16)
+	tween.parallel().tween_property(flash, "scale", Vector2(1.5, 0.4), 0.16)
+	tween.finished.connect(flash.queue_free)
+
+func _spawn_blink_effect(effect_position: Vector2):
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var flash: ColorRect = ColorRect.new()
+	flash.color = Color(0.3, 1.0, 0.86, 0.46)
+	flash.size = Vector2(46.0, 58.0) * scale.abs()
+	flash.global_position = effect_position + Vector2(-23.0, -52.0)
+	parent.add_child(flash)
+	var tween := flash.create_tween()
+	tween.tween_property(flash, "color:a", 0.0, 0.28)
+	tween.parallel().tween_property(flash, "scale", Vector2(1.35, 1.35), 0.28)
+	tween.finished.connect(flash.queue_free)
 
 func _respawn_after_delay():
 	set_physics_process(false)

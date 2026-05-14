@@ -48,6 +48,7 @@ color = Color(0.72, 0.82, 1, 0.9)
 
 [node name="Enemy" parent="." index="33"]
 position = Vector2(362, 480)
+enemy_type = "splitter"
 max_health = 42
 damage = 14
 speed = 90.0
@@ -55,6 +56,7 @@ modulate = Color(0.72, 0.8, 1, 1)
 
 [node name="Enemy2" parent="." index="34"]
 position = Vector2(700, 402)
+enemy_type = "blink"
 max_health = 32
 damage = 12
 speed = 100.0
@@ -62,6 +64,7 @@ modulate = Color(0.78, 0.86, 1, 1)
 
 [node name="Enemy3" parent="." index="35"]
 position = Vector2(932, 300)
+enemy_type = "guard"
 max_health = 48
 damage = 16
 speed = 84.0

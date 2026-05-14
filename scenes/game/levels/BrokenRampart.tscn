@@ -36,6 +36,7 @@ color = Color(0.78, 0.9, 0.38, 0.9)
 
 [node name="Enemy" parent="." index="33"]
 position = Vector2(402, 480)
+enemy_type = "rush"
 max_health = 44
 damage = 15
 speed = 96.0
@@ -43,6 +44,7 @@ follow_range = 620.0
 
 [node name="Enemy2" parent="." index="34"]
 position = Vector2(742, 402)
+enemy_type = "blink"
 max_health = 38
 damage = 13
 speed = 104.0
@@ -50,6 +52,7 @@ follow_range = 620.0
 
 [node name="Enemy3" parent="." index="35"]
 position = Vector2(968, 300)
+enemy_type = "brute"
 max_health = 52
 damage = 17
 speed = 90.0

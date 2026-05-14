@@ -42,18 +42,21 @@ color = Color(1, 0.68, 0.2, 0.98)
 
 [node name="Enemy" parent="." index="33"]
 position = Vector2(278, 480)
+enemy_type = "brute"
 max_health = 38
 damage = 13
 speed = 92.0
 
 [node name="Enemy2" parent="." index="34"]
 position = Vector2(640, 402)
+enemy_type = "rush"
 max_health = 34
 damage = 12
 speed = 98.0
 
 [node name="Enemy3" parent="." index="35"]
 position = Vector2(916, 300)
+enemy_type = "ranged"
 max_health = 44
 damage = 15
 speed = 88.0

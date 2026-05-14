@@ -61,6 +61,7 @@ modulate = Color(1, 0.6, 0.58, 1)
 
 [node name="Enemy2" parent="." index="34"]
 position = Vector2(372, 480)
+enemy_type = "guard"
 max_health = 60
 damage = 16
 speed = 98.0
@@ -69,6 +70,7 @@ modulate = Color(0.96, 0.44, 0.4, 1)
 
 [node name="Enemy3" parent="." index="35"]
 position = Vector2(944, 300)
+enemy_type = "ranged"
 max_health = 60
 damage = 16
 speed = 98.0

@@ -1,9 +1,10 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/CharacterSelect.gd" id="1_select"]
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Warrior/Warrior_Idle.png" id="2_warrior_sheet"]
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Archer/Archer_Idle.png" id="3_archer_sheet"]
 [ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Idle.png" id="4_monk_sheet"]
+[ext_resource type="Texture2D" path="res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Lancer/Lancer_Idle.png" id="5_lancer_sheet"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
 bg_color = Color(0.05, 0.06, 0.09, 0.94)
@@ -28,6 +29,22 @@ region = Rect2(0, 0, 192, 192)
 [sub_resource type="AtlasTexture" id="AtlasTexture_monk"]
 atlas = ExtResource("4_monk_sheet")
 region = Rect2(0, 0, 192, 192)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_lancer"]
+atlas = ExtResource("5_lancer_sheet")
+region = Rect2(0, 0, 192, 192)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boss_toggle"]
+bg_color = Color(0.18, 0.11, 0.25, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.76, 0.43, 1, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="CharacterSelect" type="Control"]
 layout_mode = 3
@@ -115,6 +132,32 @@ text = "Monk\nBalanced mobility\nTechnical timing"
 icon = SubResource("AtlasTexture_monk")
 expand_icon = true
 icon_alignment = 1
+
+[node name="BossToggle" type="Button" parent="Panel/VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_boss_toggle")
+theme_override_styles/hover = SubResource("StyleBoxFlat_boss_toggle")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_boss_toggle")
+text = "Boss after secret route: Secret Priest"
+
+[node name="SkinPanel" type="PanelContainer" parent="Panel/VBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_boss_toggle")
+
+[node name="VBox" type="VBoxContainer" parent="Panel/VBox/SkinPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SkinLabel" type="Label" parent="Panel/VBox/SkinPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.76, 1, 1)
+text = "Skin for Warrior: Default"
+
+[node name="SkinDescription" type="Label" parent="Panel/VBox/SkinPanel/VBox"]
+layout_mode = 2
+text = "G cycles skins for the highlighted hero."
+autowrap_mode = 3
 
 [node name="Hint" type="Label" parent="Panel/VBox"]
 layout_mode = 2

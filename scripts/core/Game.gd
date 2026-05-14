@@ -85,6 +85,36 @@ const CHARACTER_CONFIGS := {
 		"special_heal_amount": 32,
 		"special_cooldown": 8.0
 	},
+	"warrior_spearman": {
+		"label": "Lancer Knight",
+		"base_character": "warrior",
+		"skin_title": "Lancer Oath",
+		"skin_description": "Real lancer sprites with long spear thrusts and a golden shockwave kick",
+		"idle": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Lancer/Lancer_Idle.png",
+		"run": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Lancer/Lancer_Run.png",
+		"attack": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Lancer/Lancer_Right_Attack.png",
+		"idle_frames": 8,
+		"run_frames": 6,
+		"attack_frames": 6,
+		"attack_hit_frame": 3,
+		"attack_type": "melee",
+		"kick_attack_type": "shockwave",
+		"max_health": 112,
+		"speed": 272.0,
+		"jump_velocity": -585.0,
+		"attack_damage": 18,
+		"attack_range": 92.0,
+		"attack_hit_radius": 78.0,
+		"attack_cooldown": 0.34,
+		"attack_anim_speed": 0.09,
+		"kick_damage": 42,
+		"kick_range": 220.0,
+		"kick_hit_radius": 58.0,
+		"kick_cooldown": 1.7,
+		"kick_hit_frame": 1,
+		"kick_knockback_force": 520.0,
+		"modulate": Color(0.96, 0.88, 0.54, 1)
+	},
 	"archer": {
 		"label": "Archer",
 		"idle": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Archer/Archer_Idle.png",
@@ -102,6 +132,31 @@ const CHARACTER_CONFIGS := {
 		"attack_damage": 18,
 		"attack_range": 72.0,
 		"double_jump": true
+	},
+	"archer_shadow": {
+		"label": "Shadow Archer",
+		"base_character": "archer",
+		"skin_title": "Shadow Volley",
+		"skin_description": "Faster double-jump archer with darker arrows",
+		"idle": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Archer/Archer_Idle.png",
+		"run": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Archer/Archer_Run.png",
+		"attack": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Archer/Archer_Shoot.png",
+		"idle_frames": 6,
+		"run_frames": 4,
+		"attack_frames": 8,
+		"attack_hit_frame": 3,
+		"attack_pose_frame": 3,
+		"attack_type": "ranged",
+		"max_health": 82,
+		"speed": 320.0,
+		"jump_velocity": -520.0,
+		"attack_damage": 16,
+		"attack_range": 84.0,
+		"attack_cooldown": 0.34,
+		"ranged_backstep_speed": 430.0,
+		"ranged_backstep_duration": 0.24,
+		"double_jump": true,
+		"modulate": Color(0.58, 0.62, 0.9, 1)
 	},
 	"monk": {
 		"label": "Monk",
@@ -162,6 +217,9 @@ const CHARACTER_CONFIGS := {
 	},
 	"secret_boss": {
 		"label": "Secret Boss",
+		"base_character": "monk",
+		"skin_title": "Secret Boss Rite",
+		"skin_description": "Boss-style suit cards and scythe burst abilities",
 		"idle": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Idle.png",
 		"run": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Run.png",
 		"attack": "res://assets/Tiny Swords (Free Pack)/Units/Yellow Units/Monk/Heal.png",
@@ -287,7 +345,7 @@ func new_game(secret_route: bool = false):
 	save_game()
 
 func set_selected_character(character_id: String):
-	if (character_id == "secret_priest" or character_id == "secret_boss") and not is_secret_priest_unlocked():
+	if character_id == "secret_priest" and not is_secret_priest_unlocked():
 		return
 	if CHARACTER_CONFIGS.has(character_id):
 		selected_character = character_id
@@ -296,6 +354,18 @@ func set_selected_character(character_id: String):
 
 func get_selected_character_config() -> Dictionary:
 	return CHARACTER_CONFIGS.get(selected_character, CHARACTER_CONFIGS["warrior"])
+
+func get_skin_options_for_character(character_id: String) -> Array[String]:
+	var options: Array[String] = []
+	if CHARACTER_CONFIGS.has(character_id):
+		options.append(character_id)
+	for option_id in CHARACTER_CONFIGS.keys():
+		if option_id == character_id:
+			continue
+		var config: Dictionary = CHARACTER_CONFIGS[option_id]
+		if str(config.get("base_character", "")) == character_id:
+			options.append(str(option_id))
+	return options
 
 func is_secret_route_active() -> bool:
 	return bool(current_run_data.get("secret_route", false))

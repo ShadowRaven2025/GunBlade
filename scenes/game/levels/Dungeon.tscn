@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/Dungeon.gd" id="1_dungeon"]
 [ext_resource type="Script" path="res://scripts/core/Player.gd" id="2_player"]
@@ -64,6 +64,18 @@ corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boss_dialog"]
+bg_color = Color(0.035, 0.018, 0.02, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9, 0.18, 0.16, 0.96)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
 
 [node name="Dungeon" type="Node2D"]
 script = ExtResource("1_dungeon")
@@ -364,6 +376,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_mana_fill")
 
 [node name="Enemy" parent="." instance=ExtResource("4_enemy")]
 position = Vector2(326, 480)
+enemy_type = "guard"
 max_health = 32
 damage = 12
 speed = 88.0
@@ -373,6 +386,7 @@ gravity = 1040.0
 
 [node name="Enemy2" parent="." instance=ExtResource("4_enemy")]
 position = Vector2(642, 402)
+enemy_type = "rush"
 max_health = 28
 damage = 10
 speed = 94.0
@@ -382,6 +396,7 @@ gravity = 1040.0
 
 [node name="Enemy3" parent="." instance=ExtResource("4_enemy")]
 position = Vector2(844, 246)
+enemy_type = "ranged"
 max_health = 36
 damage = 14
 speed = 82.0
@@ -399,6 +414,7 @@ color = Color(0.92, 0.92, 1, 0.82)
 [node name="DarknessSwitch" type="Area2D" parent="."]
 collision_layer = 0
 collision_mask = 1
+monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DarknessSwitch"]
 position = Vector2(978, 508)
@@ -413,9 +429,10 @@ offset_bottom = 640.0
 color = Color(0, 0, 0, 1)
 
 [node name="DarknessDoor" type="Area2D" parent="."]
-visible = false
 collision_layer = 0
 collision_mask = 1
+monitoring = false
+monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DarknessDoor"]
 position = Vector2(124, 568)
@@ -470,6 +487,33 @@ theme_override_colors/font_color = Color(0.74, 0.35, 1, 1)
 theme_override_font_sizes/font_size = 22
 text = "A violet covenant answers."
 horizontal_alignment = 1
+
+[node name="BossDialogPanel" type="PanelContainer" parent="CanvasLayer"]
+visible = false
+offset_left = 270.0
+offset_top = 482.0
+offset_right = 1010.0
+offset_bottom = 626.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_boss_dialog")
+
+[node name="VBox" type="VBoxContainer" parent="CanvasLayer/BossDialogPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="CanvasLayer/BossDialogPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.55, 0.48, 1)
+theme_override_font_sizes/font_size = 18
+text = "Boss"
+horizontal_alignment = 1
+
+[node name="DialogLabel" type="Label" parent="CanvasLayer/BossDialogPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.84, 1)
+theme_override_font_sizes/font_size = 24
+text = "The warden waits."
+horizontal_alignment = 1
+autowrap_mode = 3
 
 [node name="HUD" type="MarginContainer" parent="CanvasLayer"]
 offset_left = 26.0

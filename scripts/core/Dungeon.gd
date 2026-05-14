@@ -17,6 +17,11 @@ const ROOM_CLEAR_TEXT = {
 	"res://scenes/game/levels/MoonCrypt.tscn": "The crypt is clear. Reach the orange gate",
 	"res://scenes/game/levels/BrokenRampart.tscn": "The wall is reclaimed. Reach the orange gate"
 }
+const BOSS_INTRO_LINES := [
+	"Warden: Another prisoner reaches my throne.",
+	"Hero: Open the gate, or I carve it open.",
+	"Warden: Then break your chains against me."
+]
 
 @onready var player = $Player
 @onready var room_status_label: Label = $CanvasLayer/HUD/VBox/TopRow/RoomStatus
@@ -28,7 +33,11 @@ const ROOM_CLEAR_TEXT = {
 @onready var exit_area = get_node_or_null("ExitArea")
 @onready var secret_flash_label: Label = get_node_or_null("CanvasLayer/SecretFlash")
 @onready var darkness_switch: Area2D = get_node_or_null("DarknessSwitch")
+@onready var darkness_switch_visual: ColorRect = get_node_or_null("DarknessSwitchVisual")
 @onready var darkness_door: Area2D = get_node_or_null("DarknessDoor")
+@onready var darkness_door_visual: ColorRect = get_node_or_null("DarknessDoorVisual")
+@onready var boss_dialog_panel: PanelContainer = get_node_or_null("CanvasLayer/BossDialogPanel")
+@onready var boss_dialog_label: Label = get_node_or_null("CanvasLayer/BossDialogPanel/VBox/DialogLabel")
 
 var player_in_exit_area: bool = false
 var room_reward_granted: bool = false
@@ -37,6 +46,8 @@ var changing_scene: bool = false
 var player_in_darkness_switch: bool = false
 var player_in_darkness_door: bool = false
 var darkness_door_open: bool = false
+var boss_intro_active: bool = false
+var boss_intro_done: bool = false
 
 func _ready():
 	_apply_selected_character()
@@ -46,6 +57,7 @@ func _ready():
 		exit_area.body_entered.connect(_on_exit_area_body_entered)
 		exit_area.body_exited.connect(_on_exit_area_body_exited)
 	_setup_darkness_gate()
+	_setup_boss_intro()
 	if secret_flash_label != null:
 		secret_flash_label.visible = false
 	_update_hud()
@@ -70,6 +82,7 @@ func _apply_selected_character():
 	player.attack_damage += relic_modifiers.get("bonus_damage", 0)
 	player.attack_range = config.get("attack_range", player.attack_range)
 	player.attack_range += relic_modifiers.get("bonus_attack_range", 0.0)
+	player.attack_hit_radius = config.get("attack_hit_radius", player.attack_hit_radius)
 	player.attack_cooldown = config.get("attack_cooldown", 0.42) * relic_modifiers.get("attack_cooldown_multiplier", 1.0)
 	player.attack_anim_speed = config.get("attack_anim_speed", player.attack_anim_speed)
 	player.kick_attack_type = config.get("kick_attack_type", "melee")
@@ -78,6 +91,8 @@ func _apply_selected_character():
 	player.kick_hit_radius = config.get("kick_hit_radius", player.kick_hit_radius)
 	player.kick_cooldown = config.get("kick_cooldown", 0.52) * relic_modifiers.get("kick_cooldown_multiplier", 1.0)
 	player.kick_hit_frame = config.get("kick_hit_frame", player.kick_hit_frame)
+	player.ranged_backstep_speed = config.get("ranged_backstep_speed", player.ranged_backstep_speed)
+	player.ranged_backstep_duration = config.get("ranged_backstep_duration", player.ranged_backstep_duration)
 	player.parry_duration = config.get("parry_duration", player.parry_duration)
 	player.special_ability = config.get("special_ability", "")
 	player.special_heal_amount = config.get("special_heal_amount", player.special_heal_amount)
@@ -131,6 +146,8 @@ func _process(_delta):
 		changing_scene = true
 		get_tree().change_scene_to_file(MAIN_MENU_SCENE)
 		return
+	if boss_intro_active:
+		return
 
 	if player_in_exit_area and _can_use_exit() and Input.is_action_just_pressed("interact"):
 		_use_exit()
@@ -172,6 +189,11 @@ func _update_hud():
 		return
 
 	_grant_room_reward_if_ready()
+
+	if boss_intro_active:
+		state_label.text = "The warden speaks"
+		room_status_label.text = "Boss encounter begins after the warning"
+		return
 
 	if is_boss_room:
 		if enemies_left > 0:
@@ -304,22 +326,69 @@ func _get_alive_enemy_count() -> int:
 func _setup_darkness_gate():
 	if scene_file_path != Game.get_floor_scene_path(1):
 		return
+	if darkness_switch_visual != null:
+		darkness_switch_visual.visible = true
 	if darkness_switch != null:
 		darkness_switch.visible = true
+		darkness_switch.monitoring = true
+		darkness_switch.monitorable = true
 		darkness_switch.body_entered.connect(_on_darkness_switch_body_entered)
 		darkness_switch.body_exited.connect(_on_darkness_switch_body_exited)
+	if darkness_door_visual != null:
+		darkness_door_visual.visible = false
 	if darkness_door != null:
-		darkness_door.visible = false
+		darkness_door.visible = true
+		darkness_door.monitoring = false
+		darkness_door.monitorable = false
 		darkness_door.body_entered.connect(_on_darkness_door_body_entered)
 		darkness_door.body_exited.connect(_on_darkness_door_body_exited)
+
+func _setup_boss_intro():
+	if not Game.is_boss_floor() or scene_file_path == TEST_ROOM_SCENE:
+		_hide_boss_dialog()
+		return
+	if boss_intro_done:
+		return
+	boss_intro_active = true
+	_set_boss_enemies_enabled(false)
+	_run_boss_intro()
+
+func _run_boss_intro():
+	if boss_dialog_panel != null:
+		boss_dialog_panel.visible = true
+	for line in BOSS_INTRO_LINES:
+		if boss_dialog_label != null:
+			boss_dialog_label.text = line
+		await get_tree().create_timer(1.45).timeout
+	_hide_boss_dialog()
+	boss_intro_active = false
+	boss_intro_done = true
+	_set_boss_enemies_enabled(true)
+	_update_hud()
+
+func _hide_boss_dialog():
+	if boss_dialog_panel != null:
+		boss_dialog_panel.visible = false
+
+func _set_boss_enemies_enabled(enabled: bool):
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if enemy is Enemy and enemy.is_boss:
+			enemy.movement_locked = not enabled
+			enemy.velocity = Vector2.ZERO
 
 func _can_activate_darkness_switch() -> bool:
 	return not darkness_door_open and _get_alive_enemy_count() == 0
 
 func _activate_darkness_switch():
 	darkness_door_open = true
+	if darkness_switch_visual != null:
+		darkness_switch_visual.color = Color(0.55, 0.28, 1, 0.92)
 	if darkness_door != null:
 		darkness_door.visible = true
+		darkness_door.monitoring = true
+		darkness_door.monitorable = true
+	if darkness_door_visual != null:
+		darkness_door_visual.visible = true
 	if secret_flash_label != null:
 		secret_flash_label.text = "A door opens into absolute dark."
 		secret_flash_label.visible = true
