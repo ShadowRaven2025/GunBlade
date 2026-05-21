@@ -109,6 +109,13 @@ func _apply_selected_character():
 	player.starfall_base_count = config.get("starfall_base_count", player.starfall_base_count)
 	player.starfall_extra_count = config.get("starfall_extra_count", player.starfall_extra_count)
 	player.kick_knockback_force = config.get("kick_knockback_force", 340.0) + relic_modifiers.get("bonus_kick_force", 0.0)
+	player.charge_thrust_distance = config.get("charge_thrust_distance", 180.0)
+	player.charge_thrust_duration = config.get("charge_thrust_duration", 0.28)
+	player.charge_thrust_first_hit_multiplier = config.get("charge_thrust_first_hit_multiplier", 1.5)
+	player.charge_thrust_max_charge_time = config.get("charge_thrust_max_charge_time", 1.2)
+	player.charge_thrust_charged_distance = config.get("charge_thrust_charged_distance", 280.0)
+	player.charge_thrust_charged_duration = config.get("charge_thrust_charged_duration", 0.35)
+	player.charge_thrust_charged_damage_multiplier = config.get("charge_thrust_charged_damage_multiplier", 1.8)
 	player.set_character_visuals(
 		config.get("idle", ""),
 		config.get("run", ""),

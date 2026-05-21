@@ -208,9 +208,13 @@ func _apply_knockback_motion(delta):
 func attack(player):
 	can_attack = false
 	_spawn_attack_effect()
-	player.take_damage(damage)
-	await get_tree().create_timer(attack_cooldown).timeout
-	can_attack = true
+	if is_instance_valid(player) and player.has_method("take_damage"):
+		player.take_damage(damage)
+	var tree = get_tree()
+	if tree != null:
+		await tree.create_timer(attack_cooldown).timeout
+	if is_instance_valid(self):
+		can_attack = true
 
 func _handle_ranged_enemy(to_player: Vector2, horizontal_distance: float):
 	facing_direction = sign(to_player.x) if to_player.x != 0.0 else facing_direction
@@ -236,8 +240,11 @@ func _fire_enemy_projectile(direction: Vector2):
 	bolt.set_meta("enemy_projectile", true)
 	get_parent().add_child(bolt)
 	_animate_enemy_projectile(bolt)
-	await get_tree().create_timer(projectile_cooldown).timeout
-	projectile_ready = true
+	var tree = get_tree()
+	if tree != null:
+		await tree.create_timer(projectile_cooldown).timeout
+	if is_instance_valid(self):
+		projectile_ready = true
 
 func _animate_enemy_projectile(bolt: ColorRect):
 	while is_instance_valid(bolt):
@@ -267,8 +274,11 @@ func _blink_near_player(direction_to_player: float):
 	global_position.x += direction_to_player * minf(blink_distance, 180.0)
 	facing_direction = direction_to_player
 	_spawn_blink_effect(global_position)
-	await get_tree().create_timer(blink_cooldown).timeout
-	blink_ready = true
+	var tree = get_tree()
+	if tree != null:
+		await tree.create_timer(blink_cooldown).timeout
+	if is_instance_valid(self):
+		blink_ready = true
 
 func _set_animation(animation_name: String):
 	if current_animation == animation_name:
@@ -361,8 +371,11 @@ func _start_boss_leap(direction: float):
 	_call_reset_boss_leap()
 
 func _call_reset_boss_leap():
-	await get_tree().create_timer(boss_leap_cooldown).timeout
-	boss_leap_ready = true
+	var tree = get_tree()
+	if tree != null:
+		await tree.create_timer(boss_leap_cooldown).timeout
+	if is_instance_valid(self):
+		boss_leap_ready = true
 
 func _try_activate_boss_phase_two():
 	if boss_phase_two_active:
@@ -475,7 +488,12 @@ func _respawn_after_delay():
 	visible = false
 	collision_shape.set_deferred("disabled", true)
 	hurtbox_shape.set_deferred("disabled", true)
-	await get_tree().create_timer(respawn_delay).timeout
+	var tree = get_tree()
+	if tree == null:
+		return
+	await tree.create_timer(respawn_delay).timeout
+	if not is_instance_valid(self):
+		return
 	global_position = spawn_position
 	current_health = max_health
 	can_attack = true

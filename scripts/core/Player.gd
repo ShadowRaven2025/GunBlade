@@ -44,6 +44,13 @@ const SECRET_SCYTHE_SCENE = preload("res://scenes/game/projectiles/SecretScythe.
 @export var special_heal_amount: int = 0
 @export var special_cooldown: float = 8.0
 @export var developer_damage_multiplier: int = 1000
+@export var charge_thrust_distance: float = 180.0
+@export var charge_thrust_duration: float = 0.28
+@export var charge_thrust_first_hit_multiplier: float = 1.5
+@export var charge_thrust_max_charge_time: float = 1.2
+@export var charge_thrust_charged_distance: float = 280.0
+@export var charge_thrust_charged_duration: float = 0.35
+@export var charge_thrust_charged_damage_multiplier: float = 1.8
 
 var current_health: int
 var can_attack: bool = true
@@ -79,6 +86,13 @@ var special_ability: String = ""
 var special_cooldown_left: float = 0.0
 var parry_time_left: float = 0.0
 var developer_mode_enabled: bool = false
+var is_charging_thrust: bool = false
+var charge_thrust_time_left: float = 0.0
+var charge_thrust_direction: float = 0.0
+var charge_thrust_hit_enemies: Array = []
+var is_charging_thrust_hold: bool = false
+var charge_thrust_charge_time: float = 0.0
+var has_hyper_armor: bool = false
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var health_bar: ProgressBar = $HealthBar
@@ -155,11 +169,18 @@ func _physics_process(delta):
 	_update_starfall_charge(delta)
 	_update_special_ability(delta)
 	_update_parry(delta)
+	_update_charge_thrust(delta)
 
-	if backstep_time_left > 0.0:
+	if is_charging_thrust:
+		var thrust_distance = charge_thrust_charged_distance if has_hyper_armor else charge_thrust_distance
+		var thrust_duration = charge_thrust_charged_duration if has_hyper_armor else charge_thrust_duration
+		velocity.x = charge_thrust_direction * (thrust_distance / thrust_duration)
+	elif is_charging_thrust_hold:
+		velocity.x = move_toward(velocity.x, 0.0, speed * 0.3)
+	elif backstep_time_left > 0.0:
 		backstep_time_left = max(backstep_time_left - delta, 0.0)
 		velocity.x = backstep_direction * ranged_backstep_speed
-	elif is_attacking or is_channeling_magic or is_charging_starfall:
+	elif is_attacking or is_channeling_magic or is_charging_starfall or is_charging_thrust or is_charging_thrust_hold:
 		velocity.x = move_toward(velocity.x, 0.0, speed * 0.15)
 	else:
 		velocity.x = input_axis * speed
@@ -171,6 +192,11 @@ func _physics_process(delta):
 	if attack_type == "magic" or attack_type == "secret_boss":
 		if Input.is_action_just_pressed("kick") and can_attack and not is_attacking and not is_channeling_magic:
 			_begin_starfall_charge()
+	elif kick_attack_type == "charge_thrust":
+		if Input.is_action_just_pressed("kick") and can_attack and not is_channeling_magic and not is_charging_thrust_hold:
+			_begin_charge_thrust_hold()
+		elif Input.is_action_just_released("kick") and is_charging_thrust_hold:
+			_release_charge_thrust()
 	elif Input.is_action_just_pressed("kick") and can_attack and not is_channeling_magic:
 		attack("kick")
 	elif attack_type != "magic" and Input.is_action_just_pressed("attack") and can_attack:
@@ -501,6 +527,9 @@ func _kick_enemies_in_attack():
 	if kick_attack_type == "shockwave":
 		_cast_warrior_shockwave()
 		return
+	if kick_attack_type == "charge_thrust":
+		_start_charge_thrust()
+		return
 	var attack_center = global_position + Vector2(kick_range * facing_direction, -6.0)
 	for node in get_tree().get_nodes_in_group("enemies"):
 		if not node.has_method("take_damage"):
@@ -546,6 +575,167 @@ func _spawn_shockwave_visual(start_x: float):
 	tween.tween_property(wave, "color:a", 0.0, 0.22)
 	tween.parallel().tween_property(wave, "size:y", 4.0, 0.22)
 	tween.finished.connect(wave.queue_free)
+
+func _begin_charge_thrust_hold():
+	is_charging_thrust_hold = true
+	charge_thrust_charge_time = 0.0
+	can_attack = false
+	_spawn_charge_indicator()
+
+func _release_charge_thrust():
+	if not is_charging_thrust_hold:
+		return
+	
+	is_charging_thrust_hold = false
+	_remove_charge_indicator()
+	var is_fully_charged = charge_thrust_charge_time >= charge_thrust_max_charge_time
+	_start_charge_thrust(is_fully_charged)
+
+func _start_charge_thrust(is_charged: bool = false):
+	is_charging_thrust = true
+	charge_thrust_direction = facing_direction
+	charge_thrust_hit_enemies.clear()
+	
+	if is_charged:
+		charge_thrust_time_left = charge_thrust_charged_duration
+		has_hyper_armor = true
+		_spawn_charge_thrust_visual(true)
+	else:
+		charge_thrust_time_left = charge_thrust_duration
+		has_hyper_armor = false
+		_spawn_charge_thrust_visual(false)
+
+func _update_charge_thrust(delta: float):
+	# Обновление зарядки
+	if is_charging_thrust_hold:
+		charge_thrust_charge_time = min(charge_thrust_charge_time + delta, charge_thrust_max_charge_time)
+		_update_charge_indicator()
+		return
+	
+	if not is_charging_thrust:
+		return
+	
+	charge_thrust_time_left = max(charge_thrust_time_left - delta, 0.0)
+	
+	# Определяем параметры рывка
+	var is_charged = has_hyper_armor
+	var thrust_distance = charge_thrust_charged_distance if is_charged else charge_thrust_distance
+	var thrust_duration = charge_thrust_charged_duration if is_charged else charge_thrust_duration
+	
+	# Проверяем столкновения с врагами во время рывка
+	for node in get_tree().get_nodes_in_group("enemies"):
+		if not node.has_method("take_damage"):
+			continue
+		var enemy: Node2D = node as Node2D
+		if not is_instance_valid(enemy):
+			continue
+		if charge_thrust_hit_enemies.has(enemy):
+			continue
+		
+		var distance_to_enemy = global_position.distance_to(enemy.global_position)
+		if distance_to_enemy <= kick_hit_radius:
+			var is_first_hit = charge_thrust_hit_enemies.is_empty()
+			var damage_multiplier = charge_thrust_first_hit_multiplier if is_first_hit else 1.0
+			
+			if is_charged:
+				damage_multiplier *= charge_thrust_charged_damage_multiplier
+			
+			var final_damage = int(_get_developer_damage(kick_damage) * damage_multiplier)
+			enemy.take_damage(final_damage)
+			
+			if enemy.has_method("apply_knockback"):
+				var knockback_force = kick_knockback_force * (1.5 if is_charged else 1.0)
+				enemy.apply_knockback(Vector2(knockback_force * charge_thrust_direction, -80.0 if is_charged else -60.0))
+			
+			charge_thrust_hit_enemies.append(enemy)
+	
+	if charge_thrust_time_left <= 0.0:
+		is_charging_thrust = false
+		has_hyper_armor = false
+		charge_thrust_hit_enemies.clear()
+		can_attack = true
+
+func _spawn_charge_thrust_visual(is_charged: bool = false):
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	
+	var thrust_distance = charge_thrust_charged_distance if is_charged else charge_thrust_distance
+	var thrust_duration = charge_thrust_charged_duration if is_charged else charge_thrust_duration
+	
+	# Создаём след от копья
+	var trail: ColorRect = ColorRect.new()
+	if is_charged:
+		trail.color = Color(1.0, 0.95, 0.3, 0.85)  # Яркий золотой для заряженного
+	else:
+		trail.color = Color(0.96, 0.88, 0.54, 0.65)  # Обычный золотистый
+	
+	trail.size = Vector2(thrust_distance, 16.0 if is_charged else 12.0)
+	trail.position = Vector2(global_position.x if charge_thrust_direction > 0.0 else global_position.x - thrust_distance, global_position.y - 20.0)
+	parent.add_child(trail)
+	
+	var tween: Tween = trail.create_tween()
+	tween.tween_property(trail, "color:a", 0.0, thrust_duration + 0.1)
+	tween.parallel().tween_property(trail, "size:y", 3.0, thrust_duration + 0.1)
+	tween.finished.connect(trail.queue_free)
+	
+	# Дополнительный эффект для заряженного рывка
+	if is_charged:
+		var glow: ColorRect = ColorRect.new()
+		glow.color = Color(1.0, 0.9, 0.4, 0.5)
+		glow.size = Vector2(80.0, 80.0)
+		glow.position = global_position + Vector2(-40.0, -60.0)
+		parent.add_child(glow)
+		
+		var glow_tween: Tween = glow.create_tween()
+		glow_tween.tween_property(glow, "color:a", 0.0, 0.3)
+		glow_tween.parallel().tween_property(glow, "scale", Vector2(1.5, 1.5), 0.3)
+		glow_tween.finished.connect(glow.queue_free)
+
+var charge_indicator: ColorRect = null
+
+func _spawn_charge_indicator():
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	
+	charge_indicator = ColorRect.new()
+	charge_indicator.color = Color(0.96, 0.88, 0.54, 0.4)
+	charge_indicator.size = Vector2(60.0, 8.0)
+	charge_indicator.position = global_position + Vector2(-30.0, -70.0)
+	parent.add_child(charge_indicator)
+
+func _update_charge_indicator():
+	if charge_indicator == null or not is_instance_valid(charge_indicator):
+		return
+	
+	var charge_ratio = charge_thrust_charge_time / charge_thrust_max_charge_time
+	charge_indicator.size.x = 60.0 * charge_ratio
+	charge_indicator.position = global_position + Vector2(-30.0, -70.0)
+	
+	if charge_ratio >= 1.0:
+		charge_indicator.color = Color(1.0, 0.95, 0.3, 0.8)  # Яркий золотой при полной зарядке
+	else:
+		charge_indicator.color = Color(0.96, 0.88, 0.54, 0.4 + charge_ratio * 0.4)
+
+func _remove_charge_indicator():
+	if charge_indicator != null and is_instance_valid(charge_indicator):
+		charge_indicator.queue_free()
+		charge_indicator = null
+
+func _spawn_hyper_armor_visual():
+	var parent: Node = get_parent()
+	if parent == null:
+		return
+	var shield: ColorRect = ColorRect.new()
+	shield.color = Color(1.0, 0.95, 0.3, 0.6)
+	shield.size = Vector2(50.0, 60.0)
+	shield.position = global_position + Vector2(-25.0, -55.0)
+	parent.add_child(shield)
+	var tween: Tween = shield.create_tween()
+	tween.tween_property(shield, "color:a", 0.0, 0.2)
+	tween.parallel().tween_property(shield, "scale", Vector2(1.3, 1.3), 0.2)
+	tween.finished.connect(shield.queue_free)
 
 func _start_parry():
 	parry_time_left = parry_duration
@@ -685,6 +875,10 @@ func take_damage(amount: int):
 		current_health = max_health
 		_update_health_bar()
 		return
+	if has_hyper_armor:
+		# С гиперармором получаем только 30% урона
+		amount = int(amount * 0.3)
+		_spawn_hyper_armor_visual()
 	if parry_time_left > 0.0:
 		_trigger_parry_counter()
 		return
