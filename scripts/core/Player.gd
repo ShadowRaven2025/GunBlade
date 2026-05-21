@@ -189,6 +189,11 @@ func _physics_process(delta):
 	move_and_slide()
 	_animate(delta)
 	
+	# Обработка атаки на ЛКМ (работает для всех персонажей)
+	if attack_type != "magic" and attack_type != "secret_boss" and Input.is_action_just_pressed("attack") and can_attack:
+		attack("primary")
+	
+	# Обработка ПКМ в зависимости от типа персонажа
 	if attack_type == "magic" or attack_type == "secret_boss":
 		if Input.is_action_just_pressed("kick") and can_attack and not is_attacking and not is_channeling_magic:
 			_begin_starfall_charge()
@@ -199,8 +204,6 @@ func _physics_process(delta):
 			_release_charge_thrust()
 	elif Input.is_action_just_pressed("kick") and can_attack and not is_channeling_magic:
 		attack("kick")
-	elif attack_type != "magic" and Input.is_action_just_pressed("attack") and can_attack:
-		attack("primary")
 
 func _update_special_ability(delta: float):
 	if special_cooldown_left > 0.0:
